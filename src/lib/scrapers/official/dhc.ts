@@ -1,107 +1,140 @@
-import { Product, ShopData } from '@/types/product'
-import { sleep } from '@/lib/utils'
+import { Product, ShopData } from "@/types/product";
+import { launchPuppeteerWithProxy } from "../common";
 
-// Mock scraper for DHC
+
+const CATEGORY_URLS = [
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10115000&sc_iid=catop_skin_sl_10115000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10118000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10164000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10116000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=11801000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10132000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10155000",
+  "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=11622002",
+];
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function scrapeDHC(): Promise<ShopData> {
-  // Simulate scraping delay
-  await sleep(1500 + Math.random() * 2500)
-  
-  const mockProducts: Product[] = [
-    {
-      productName: "DHC 薬用ディープクレンジングオイル 200ml",
-      imageUrl: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop",
-      price: 2750,
-      salePrice: 2200,
-      asin: "DHC001",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC コエンザイムQ10 クリーム 50g",
-      imageUrl: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=300&h=300&fit=crop",
-      price: 4180,
-      asin: "DHC002",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC ビタミンC 60日分 120粒",
-      imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&h=300&fit=crop",
-      price: 990,
-      salePrice: 792,
-      asin: "DHC003",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用リップクリーム 1.5g",
-      imageUrl: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop",
-      price: 770,
-      asin: "DHC004",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC マイルドローション 180ml",
-      imageUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&h=300&fit=crop",
-      price: 3080,
-      salePrice: 2464,
-      asin: "DHC005",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用アクネコントロール ミルク 160ml",
-      imageUrl: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=300&h=300&fit=crop",
-      price: 1760,
-      asin: "DHC006",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC コラーゲン 60日分 360粒",
-      imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&h=300&fit=crop",
-      price: 2160,
-      salePrice: 1728,
-      asin: "DHC007",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用PWクリーム 50g",
-      imageUrl: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=300&h=300&fit=crop",
-      price: 7700,
-      asin: "DHC008",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用カムCホワイトニング 25ml",
-      imageUrl: "https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?w=300&h=300&fit=crop",
-      price: 4950,
-      salePrice: 3960,
-      asin: "DHC009",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用スキンケアセット",
-      imageUrl: "https://images.unsplash.com/photo-1612817288484-6f916006741a?w=300&h=300&fit=crop",
-      price: 8800,
-      salePrice: 7040,
-      asin: "DHC010",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC フォースコリー 60日分 240粒",
-      imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&h=300&fit=crop",
-      price: 2932,
-      asin: "DHC011",
-      updatedAt: new Date().toISOString()
-    },
-    {
-      productName: "DHC 薬用ホワイトニングセラム 30ml",
-      imageUrl: "https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?w=300&h=300&fit=crop",
-      price: 5500,
-      salePrice: 4400,
-      asin: "DHC012",
-      updatedAt: new Date().toISOString()
+  const { browser, page } = await launchPuppeteerWithProxy();
+  let allProducts: Product[] = [];
+
+  for (const url of CATEGORY_URLS) {
+    console.log(`\n==== Scraping category: ${url} ====`);
+    await page.goto(url, { waitUntil: "networkidle2" });
+    await wait(2000);
+
+    let pageNum = 1;
+    let hasNext = true;
+    while (hasNext) {
+      await page.waitForSelector("#goods > li", { timeout: 10000 });
+
+      // 商品リスト取得
+      const products: Product[] = await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll("#goods > li"));
+        const now = new Date().toISOString();
+        return items.map((li) => {
+          const imgElem = li.querySelector(".img_box a img");
+          let imageUrl = imgElem?.getAttribute("data-src") || imgElem?.getAttribute("src") || "";
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            imageUrl = "https://www.dhc.co.jp" + imageUrl;
+          }
+          if (imageUrl.includes("noimage")) {
+            imageUrl = "";
+          }
+          const name = li.querySelector(".name_box .name a")?.textContent?.trim() || "";
+
+          const price1Text =
+            li.querySelector(".price_box .price1")?.textContent?.replace(/[,¥円\s]/g, "") || "";
+          const price2Text =
+            li.querySelector(".price_box .price2 strong")?.textContent?.replace(/[,¥円\s]/g, "") ||
+            "";
+
+          let price: number | undefined = undefined;
+          let salePrice: number | undefined = undefined;
+          if (price1Text) {
+            price = parseInt(price1Text, 10);
+            if (price2Text) {
+              salePrice = parseInt(price2Text, 10);
+            }
+          } else if (price2Text) {
+            price = parseInt(price2Text, 10);
+          }
+
+          if (isNaN(price as number)) price = undefined;
+          if (isNaN(salePrice as number)) salePrice = undefined;
+
+          return {
+            name,
+            imageUrl,
+            price,
+            salePrice,
+            asin: undefined, // DHCにはASINがないのでundefined
+            updatedAt: now,
+          };
+        });
+      });
+
+      if (products.length === 0) {
+        console.log(`No products in DOM on page ${pageNum}. Scraping finished for this category.`);
+        break;
+      }
+
+      allProducts = allProducts.concat(products);
+      console.log(`Page ${pageNum} scraped. Products so far: ${allProducts.length}`);
+
+      // 「次へ」ボタンの有無を判定
+      hasNext = await page.evaluate(() => {
+        const nextBtn = document.querySelector(".page-link.next");
+        return (
+          !!nextBtn &&
+          !nextBtn.hasAttribute("disabled") &&
+          !nextBtn.classList.contains("disabled") &&
+          nextBtn.getAttribute("aria-disabled") !== "true"
+        );
+      });
+
+      if (!hasNext) break;
+
+      // 1件目の商品名でページ遷移を検知
+      const firstProductName = await page.evaluate(() => {
+        const first = document.querySelector("#goods > li .name_box .name a");
+        return first?.textContent?.trim() || "";
+      });
+
+      // 「次へ」ボタンをクリック
+      await page.evaluate(() => {
+        const btn = document.querySelector(".page-link.next") as HTMLElement;
+        if (btn) btn.click();
+      });
+
+      // 商品リストの1件目が変わるまで待つ（最大10秒）
+      const maxWait = 10000;
+      const interval = 200;
+      let waited = 0;
+      while (waited < maxWait) {
+        await wait(interval);
+        const newFirstProductName = await page.evaluate(() => {
+          const first = document.querySelector("#goods > li .name_box .name a");
+          return first?.textContent?.trim() || "";
+        });
+        if (newFirstProductName && newFirstProductName !== firstProductName) {
+          break;
+        }
+        waited += interval;
+      }
+      await wait(1000); // 念のため1秒待つ
+
+      pageNum++;
     }
-  ]
-  
+  }
+
+  await browser.close();
+
   return {
     lastUpdated: new Date().toISOString(),
-    products: mockProducts
-  }
+    products: allProducts,
+  };
 }

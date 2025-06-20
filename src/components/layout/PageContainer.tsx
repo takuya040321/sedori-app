@@ -1,14 +1,14 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { ReactNode } from 'react'
+import { motion } from "framer-motion";
+import { ReactNode } from "react";
 
 interface PageContainerProps {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }
 
-export function PageContainer({ children, className = '' }: PageContainerProps) {
+export function PageContainer({ children, className = "" }: PageContainerProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,5 +18,5 @@ export function PageContainer({ children, className = '' }: PageContainerProps) 
     >
       {children}
     </motion.div>
-  )
+  );
 }

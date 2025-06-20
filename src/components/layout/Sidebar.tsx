@@ -1,135 +1,111 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Home, 
-  Store, 
-  ChevronDown, 
-  ChevronRight, 
-  Menu, 
-  X,
-  Package,
-  ShoppingBag
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { Home, Store, ChevronRight, Menu, X, Package, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface NavItem {
-  title: string
-  href?: string
-  icon: React.ReactNode
-  children?: NavItem[]
+  title: string;
+  href?: string;
+  icon: React.ReactNode;
+  children?: NavItem[];
 }
 
 const navigation: NavItem[] = [
   {
-    title: 'ダッシュボード',
-    href: '/dashboard',
-    icon: <Home className="w-5 h-5" />
+    title: "ダッシュボード",
+    href: "/dashboard",
+    icon: <Home className="w-5 h-5" />,
   },
   {
-    title: 'Official',
+    title: "Official",
     icon: <Store className="w-5 h-5" />,
     children: [
       {
-        title: 'VT Cosmetics',
-        href: '/shop/official/vt-cosmetics',
-        icon: <Package className="w-4 h-4" />
+        title: "VT Cosmetics",
+        href: "/shop/official/vt-cosmetics",
+        icon: <Package className="w-4 h-4" />,
       },
       {
-        title: 'DHC',
-        href: '/shop/official/dhc',
-        icon: <ShoppingBag className="w-4 h-4" />
-      }
-    ]
+        title: "DHC",
+        href: "/shop/official/dhc",
+        icon: <ShoppingBag className="w-4 h-4" />,
+      },
+    ],
   },
   {
-    title: 'Rakuten',
+    title: "Rakuten",
     icon: <Store className="w-5 h-5 opacity-50" />,
     children: [
       {
-        title: 'VT Cosmetics',
-        href: '#',
-        icon: <Package className="w-4 h-4 opacity-50" />
+        title: "VT Cosmetics",
+        href: "/shop/dummy",
+        icon: <Package className="w-4 h-4 opacity-50" />,
       },
       {
-        title: 'DHC',
-        href: '#',
-        icon: <ShoppingBag className="w-4 h-4 opacity-50" />
-      }
-    ]
+        title: "DHC",
+        href: "/shop/dummy",
+        icon: <ShoppingBag className="w-4 h-4 opacity-50" />,
+      },
+    ],
   },
   {
-    title: 'Yahoo',
+    title: "Yahoo",
     icon: <Store className="w-5 h-5 opacity-50" />,
     children: [
       {
-        title: 'VT Cosmetics',
-        href: '#',
-        icon: <Package className="w-4 h-4 opacity-50" />
+        title: "VT Cosmetics",
+        href: "/shop/dummy",
+        icon: <Package className="w-4 h-4 opacity-50" />,
       },
       {
-        title: 'DHC',
-        href: '#',
-        icon: <ShoppingBag className="w-4 h-4 opacity-50" />
-      }
-    ]
-  }
-]
+        title: "DHC",
+        href: "/shop/dummy",
+        icon: <ShoppingBag className="w-4 h-4 opacity-50" />,
+      },
+    ],
+  },
+];
 
 export function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Official'])
-  const pathname = usePathname()
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Official"]);
+  const pathname = usePathname();
 
   const toggleExpanded = (title: string) => {
-    setExpandedItems(prev => 
-      prev.includes(title) 
-        ? prev.filter(item => item !== title)
-        : [...prev, title]
-    )
-  }
+    setExpandedItems((prev) =>
+      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
+    );
+  };
 
   const NavItemComponent = ({ item, level = 0 }: { item: NavItem; level?: number }) => {
-    const isExpanded = expandedItems.includes(item.title)
-    const isActive = item.href === pathname
-    const hasChildren = item.children && item.children.length > 0
+    const isExpanded = expandedItems.includes(item.title);
+    const isActive = item.href === pathname;
+    const hasChildren = item.children && item.children.length > 0;
 
     return (
       <div className="space-y-1">
         {item.href ? (
           <Link href={item.href}>
-            <motion.div
-              whileHover={{ x: 4 }}
+            <div
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                 level > 0 && "ml-6",
-                isActive 
-                  ? "gradient-primary text-white shadow-lg glow-effect" 
+                isActive
+                  ? "gradient-primary text-white shadow-lg glow-effect"
                   : "text-gray-300 hover:text-white hover:bg-white/10"
               )}
             >
               {item.icon}
-              <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="truncate"
-                  >
-                    {item.title}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.div>
+              {!isCollapsed && <span className="truncate">{item.title}</span>}
+            </div>
           </Link>
         ) : (
-          <motion.button
-            whileHover={{ x: 2 }}
+          <button
             onClick={() => hasChildren && toggleExpanded(item.title)}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full",
@@ -137,48 +113,33 @@ export function Sidebar() {
             )}
           >
             {item.icon}
-            <AnimatePresence>
-              {!isCollapsed && (
-                <>
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="truncate flex-1 text-left"
+            {!isCollapsed && (
+              <>
+                <span className="truncate flex-1 text-left">{item.title}</span>
+                {hasChildren && (
+                  <motion.div
+                    animate={{ rotate: isExpanded ? 90 : 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    {item.title}
-                  </motion.span>
-                  {hasChildren && (
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 90 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </motion.div>
-                  )}
-                </>
-              )}
-            </AnimatePresence>
-          </motion.button>
+                    <ChevronRight className="w-4 h-4" />
+                  </motion.div>
+                )}
+              </>
+            )}
+          </button>
         )}
 
-        <AnimatePresence>
-          {hasChildren && isExpanded && !isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-1"
-            >
-              {item.children?.map((child) => (
-                <NavItemComponent key={child.title} item={child} level={level + 1} />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* サブメニュー展開部：アニメーションなし */}
+        {hasChildren && isExpanded && !isCollapsed && (
+          <div className="space-y-1">
+            {item.children?.map((child) => (
+              <NavItemComponent key={child.title} item={child} level={level + 1} />
+            ))}
+          </div>
+        )}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <motion.div
@@ -234,11 +195,11 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="text-xs text-gray-400 text-center"
             >
-              © 2024 ShopScraper
+              © 2025 ShopScraper
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </motion.div>
-  )
+  );
 }
