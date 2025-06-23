@@ -1,3 +1,5 @@
+// src\components\product-list\ScrapingButton.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -9,11 +11,12 @@ import { Button } from "@/components/ui/button";
 interface ScrapingButtonProps {
   category: string;
   shopName: string;
+  onScraped?: () => void;
 }
 
 type ScrapingState = "idle" | "loading" | "success" | "error";
 
-export function ScrapingButton({ category, shopName }: ScrapingButtonProps) {
+export function ScrapingButton({ category, shopName, onScraped }: ScrapingButtonProps) {
   const [state, setState] = useState<ScrapingState>("idle");
   const [message, setMessage] = useState("");
 
@@ -36,6 +39,8 @@ export function ScrapingButton({ category, shopName }: ScrapingButtonProps) {
           spread: 70,
           origin: { y: 0.6 },
         });
+
+        if (onScraped) onScraped();
 
         setTimeout(() => {
           setState("idle");

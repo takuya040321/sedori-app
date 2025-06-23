@@ -1,9 +1,8 @@
-// src/app/shop/[category]/[shopName]/page.tsx
+// src\app\shop\[category]\[shopName]\page.tsx
 
 import { PageContainer } from "@/components/layout/PageContainer";
-import { ProductTable } from "@/components/product-list/ProductTable";
-import { ScrapingButton } from "@/components/product-list/ScrapingButton";
 import { loadShopData } from "@/lib/data-loader";
+import ShopPageClient from "./ShopPageClient";
 
 interface Props {
   params: {
@@ -19,19 +18,7 @@ export default async function ShopPage({ params }: Props) {
   return (
     <div className="h-full">
       <PageContainer>
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gradient mb-2">{shopName} 商品一覧</h2>
-            <p className="text-gray-400">
-              最終更新:{" "}
-              {shopData?.lastUpdated
-                ? new Date(shopData.lastUpdated).toLocaleString("ja-JP")
-                : "データなし"}
-            </p>
-          </div>
-          <ScrapingButton category={category} shopName={shopName} />
-        </div>
-        <ProductTable products={shopData?.products ?? []} category={category} shopName={shopName} />
+        <ShopPageClient category={category} shopName={shopName} shopData={shopData} />
       </PageContainer>
     </div>
   );

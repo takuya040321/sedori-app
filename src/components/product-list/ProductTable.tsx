@@ -1,23 +1,50 @@
+// src\components\product-list\ProductTable.tsx
+
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import useSWR from "swr";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FeeInfo, fetchKeepaData } from "@/app/api/keepa/route";
 import { Product } from "@/types/product";
 
 interface ProductTableProps {
-  products: Product[];
   category: string;
   shopName: string;
+  initialProducts: Product[];
 }
 
-export function ProductTable({ products: initialProducts, category, shopName }: ProductTableProps) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [feeInfos, setFeeInfos] = useState<FeeInfo[]>(
-    Array(initialProducts.length).fill(undefined)
-  );
-  const [asinInputs, setAsinInputs] = useState(initialProducts.map((p) => p.asin || ""));
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export const ProductTable = forwardRef(function ProductTable(
+  { category, shopName, initialProducts }: ProductTableProps,
+  ref
+) {
+  // SWRで商品データを管理
+  const { data, isLoading, mutate } = useSWR(`/api/products/${category}/${shopName}`, fetcher, {
+    fallbackData: { data: { products: initialProducts } },
+  });
+
+  // 商品データ
+  const products: Product[] = data?.data?.products ?? [];
+
+  // ASIN・Keepaデータの状態管理
+  const [feeInfos, setFeeInfos] = useState<FeeInfo[]>([]);
+  const [asinInputs, setAsinInputs] = useState<string[]>([]);
   const [loadingIndexes, setLoadingIndexes] = useState<number[]>([]);
 
+  // 商品データが変わったらASIN/feeInfosもリセット
+  useEffect(() => {
+    setAsinInputs(products.map((p) => p.asin || ""));
+    setFeeInfos(Array(products.length).fill(undefined));
+  }, [products]);
+
+  // ref経由でmutateを外部から呼べるように
+  useImperativeHandle(ref, () => ({
+    mutate,
+  }));
+
+  // ASIN入力欄のバリデーション＆状態更新
   const handleAsinChange = (index: number, value: string) => {
     const upper = value.toUpperCase();
     const filtered = upper.replace(/[^A-Z0-9]/g, "").slice(0, 10);
@@ -26,13 +53,9 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
     setAsinInputs(newInputs);
   };
 
+  // ASIN入力欄のonBlur時
   const handleAsinBlur = async (index: number) => {
     const asin = asinInputs[index];
-    setProducts((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], asin };
-      return next;
-    });
 
     // サーバーAPIにASINを保存
     if (asin.length === 10) {
@@ -55,19 +78,18 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
 
   // 非表示フラグの切り替え
   const handleHiddenChange = async (index: number, newHidden: boolean) => {
-    setProducts((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index]};
-      return next;
-    });
-
-    // サーバーAPIにhiddenの変更を保存
     await fetch(`/api/products/${category}/${shopName}/update-hidden`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ index, hidden: newHidden }),
     });
+    // mutateで再取得してもOK
+    mutate();
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -101,7 +123,7 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
         <tbody>
           {products.map((p, i) => {
             const fee = feeInfos[i];
-            const isLoading = loadingIndexes.includes(i);
+            const isLoadingFee = loadingIndexes.includes(i);
             return (
               <tr key={i} className="border-b transition hover:bg-white/10">
                 <td className="px-2 py-1">
@@ -132,7 +154,7 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
                   <input
                     type="text"
                     className="border px-1 py-0.5 rounded w-28 bg-white text-black"
-                    value={asinInputs[i]}
+                    value={asinInputs[i] || ""}
                     maxLength={10}
                     onChange={(e) => handleAsinChange(i, e.target.value)}
                     onBlur={() => handleAsinBlur(i)}
@@ -145,49 +167,56 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
                   />
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.monthlySales !== undefined
                     ? `${fee.monthlySales}個`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.amazonPrice !== undefined
                     ? `${fee.amazonPrice}円`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.salesFee !== undefined
                     ? `${fee.salesFee}円`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.fbaFee !== undefined
                     ? `${fee.fbaFee}円`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.profit !== undefined
                     ? `${fee.profit}円`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading
+                  {isLoadingFee
                     ? "取得中…"
                     : fee && fee.profitRate !== undefined
                     ? `${fee.profitRate}%`
                     : "-"}
                 </td>
                 <td className="px-2 py-1 text-foreground">
-                  {isLoading ? "取得中…" : fee && fee.roi !== undefined ? `${fee.roi}%` : "-"}
+                  {isLoadingFee ? "取得中…" : fee && fee.roi !== undefined ? `${fee.roi}%` : "-"}
+                </td>
+                <td className="px-2 py-1 text-foreground">
+                  <input
+                    type="checkbox"
+                    // checked={!!p.hidden}
+                    onChange={(e) => handleHiddenChange(i, e.target.checked)}
+                  />
                 </td>
               </tr>
             );
@@ -196,7 +225,4 @@ export function ProductTable({ products: initialProducts, category, shopName }: 
       </table>
     </div>
   );
-}
-
-
-
+});
