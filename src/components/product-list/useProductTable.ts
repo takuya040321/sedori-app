@@ -39,7 +39,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
       setLoadingIndexes((prev) => [...prev, _rowIndex]);
       // You'll need to pass the brand parameter here
       // Replace 'yourBrand' with the actual brand you want to use
-      const brand = 'yourBrand'; // TODO: Get the brand from product or props
+      const brand = "yourBrand"; // TODO: Get the brand from product or props
       const keepaInfo = await fetchASINInfo(asin, brand);
       setFeeInfos((prev) => {
         const next = [...prev];

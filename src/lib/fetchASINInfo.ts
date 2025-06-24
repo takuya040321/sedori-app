@@ -6,7 +6,7 @@ export const fetchASINInfo = async (asin: string, brand: string): Promise<AsinIn
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to fetch ASIN info');
+    throw new Error(error.message || "Failed to fetch ASIN info");
   }
   
   return response.json();
