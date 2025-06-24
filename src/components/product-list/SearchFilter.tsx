@@ -1,19 +1,19 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { Search, Filter, SortAsc } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { motion } from "framer-motion";
+import { Search, Filter, SortAsc } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface SearchFilterProps {
-  searchTerm: string
-  onSearchChange: (value: string) => void
-  sortBy: 'name' | 'price' | 'updated'
-  onSortChange: (value: 'name' | 'price' | 'updated') => void
-  filterBy: 'all' | 'sale' | 'regular'
-  onFilterChange: (value: 'all' | 'sale' | 'regular') => void
-  totalCount: number
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  sortBy: "name" | "price" | "updated";
+  onSortChange: (value: "name" | "price" | "updated") => void;
+  filterBy: "all" | "sale" | "regular";
+  onFilterChange: (value: "all" | "sale" | "regular") => void;
+  totalCount: number;
 }
 
 export function SearchFilter({
@@ -23,19 +23,19 @@ export function SearchFilter({
   onSortChange,
   filterBy,
   onFilterChange,
-  totalCount
+  totalCount,
 }: SearchFilterProps) {
   const sortOptions = [
-    { value: 'updated' as const, label: '更新日時' },
-    { value: 'name' as const, label: '商品名' },
-    { value: 'price' as const, label: '価格' }
-  ]
+    { value: "updated" as const, label: "更新日時" },
+    { value: "name" as const, label: "商品名" },
+    { value: "price" as const, label: "価格" },
+  ];
 
   const filterOptions = [
-    { value: 'all' as const, label: 'すべて' },
-    { value: 'sale' as const, label: 'セール中' },
-    { value: 'regular' as const, label: '通常価格' }
-  ]
+    { value: "all" as const, label: "すべて" },
+    { value: "sale" as const, label: "セール中" },
+    { value: "regular" as const, label: "通常価格" },
+  ];
 
   return (
     <motion.div
@@ -64,10 +64,10 @@ export function SearchFilter({
             {sortOptions.map((option) => (
               <Button
                 key={option.value}
-                variant={sortBy === option.value ? 'default' : 'ghost'}
+                variant={sortBy === option.value ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onSortChange(option.value)}
-                className={sortBy === option.value ? 'gradient-primary' : 'hover:bg-white/10'}
+                className={sortBy === option.value ? "gradient-primary" : "hover:bg-white/10"}
               >
                 {option.label}
               </Button>
@@ -83,10 +83,10 @@ export function SearchFilter({
             {filterOptions.map((option) => (
               <Button
                 key={option.value}
-                variant={filterBy === option.value ? 'default' : 'ghost'}
+                variant={filterBy === option.value ? "default" : "ghost"}
                 size="sm"
                 onClick={() => onFilterChange(option.value)}
-                className={filterBy === option.value ? 'gradient-secondary' : 'hover:bg-white/10'}
+                className={filterBy === option.value ? "gradient-secondary" : "hover:bg-white/10"}
               >
                 {option.label}
               </Button>
@@ -102,5 +102,5 @@ export function SearchFilter({
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

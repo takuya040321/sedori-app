@@ -1,3 +1,4 @@
+/* src\app\globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -64,7 +65,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 }
 
@@ -72,27 +75,27 @@
   .glass-card {
     @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
   }
-  
+
   .gradient-primary {
     @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600;
   }
-  
+
   .gradient-secondary {
     @apply bg-gradient-to-r from-emerald-500 to-teal-600;
   }
-  
+
   .gradient-accent {
     @apply bg-gradient-to-r from-amber-500 to-orange-600;
   }
-  
+
   .hover-lift {
     @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25;
   }
-  
+
   .glow-effect {
     @apply shadow-lg shadow-purple-500/25;
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent;
   }

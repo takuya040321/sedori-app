@@ -125,8 +125,8 @@ export function ScrapingButton({ category, shopName, onScraped }: ScrapingButton
             state === "success"
               ? "gradient-secondary"
               : state === "error"
-              ? "bg-red-500 hover:bg-red-600"
-              : "gradient-primary"
+                ? "bg-red-500 hover:bg-red-600"
+                : "gradient-primary"
           } transition-all duration-300`}
         >
           <span className="relative z-10 flex items-center gap-2">{getButtonContent()}</span>

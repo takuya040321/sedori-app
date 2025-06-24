@@ -5,7 +5,7 @@ import { loadShopData } from "@/lib/data-loader";
 
 export async function GET(
   request: Request,
-  { params }: { params: { category: string; shopName: string } }
+  { params }: { params: { category: string; shopName: string } },
 ) {
   const { category, shopName } = params;
   try {
@@ -14,7 +14,7 @@ export async function GET(
   } catch (error) {
     return NextResponse.json(
       { success: false, message: "データ取得に失敗しました" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

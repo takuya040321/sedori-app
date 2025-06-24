@@ -6,7 +6,7 @@ import path from "path";
 
 export async function POST(
   request: Request,
-  { params }: { params: { category: string; shopName: string } }
+  { params }: { params: { category: string; shopName: string } },
 ) {
   const { category, shopName } = params;
   const { index, asin } = await request.json();
@@ -18,7 +18,7 @@ export async function POST(
       "data",
       "products",
       category,
-      `${shopName}.json`
+      `${shopName}.json`,
     );
     const fileData = await fs.readFile(filePath, "utf-8");
     const shopData = JSON.parse(fileData);
@@ -26,7 +26,7 @@ export async function POST(
     if (!shopData.products || !shopData.products[index]) {
       return NextResponse.json(
         { success: false, message: "商品が見つかりません" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -41,7 +41,7 @@ export async function POST(
     console.error("ASIN保存エラー:", error);
     return NextResponse.json(
       { success: false, message: "ファイル書き込みエラー" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

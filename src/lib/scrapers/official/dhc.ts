@@ -1,6 +1,6 @@
+// src\lib\scrapers\official\dhc.ts
 import { Product, ShopData } from "@/types/product";
 import { launchPuppeteerWithProxy } from "../common";
-
 
 const CATEGORY_URLS = [
   "https://www.dhc.co.jp/goods/cagoods.jsp?cCode=10115000&sc_iid=catop_skin_sl_10115000",
@@ -71,7 +71,7 @@ export async function scrapeDHC(): Promise<ShopData> {
             imageUrl,
             price,
             salePrice,
-            asin: undefined, // DHCにはASINがないのでundefined
+            asins: undefined, // DHCにはASINがないのでundefined
             updatedAt: now,
           };
         });

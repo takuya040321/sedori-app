@@ -1,3 +1,4 @@
+// src/components/layout/Sidebar.tsx
 "use client";
 
 import { useState } from "react";
@@ -69,6 +70,12 @@ const navigation: NavItem[] = [
       },
     ],
   },
+  // ここにASIN一括登録を追加
+  {
+    title: "ASIN一括登録",
+    href: "/asin-upload",
+    icon: <Package className="w-5 h-5 text-blue-400" />,
+  },
 ];
 
 export function Sidebar() {
@@ -78,7 +85,7 @@ export function Sidebar() {
 
   const toggleExpanded = (title: string) => {
     setExpandedItems((prev) =>
-      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title]
+      prev.includes(title) ? prev.filter((item) => item !== title) : [...prev, title],
     );
   };
 
@@ -97,7 +104,7 @@ export function Sidebar() {
                 level > 0 && "ml-6",
                 isActive
                   ? "gradient-primary text-white shadow-lg glow-effect"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
+                  : "text-gray-300 hover:text-white hover:bg-white/10",
               )}
             >
               {item.icon}
@@ -109,7 +116,7 @@ export function Sidebar() {
             onClick={() => hasChildren && toggleExpanded(item.title)}
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full",
-              "text-gray-300 hover:text-white hover:bg-white/10"
+              "text-gray-300 hover:text-white hover:bg-white/10",
             )}
           >
             {item.icon}

@@ -8,7 +8,7 @@ import { saveShopData } from "@/lib/data-loader";
 
 export async function POST(
   request: Request,
-  { params }: { params: { category: string; shopName: string } }
+  { params }: { params: { category: string; shopName: string } },
 ) {
   const { category, shopName } = params;
 
@@ -23,7 +23,7 @@ export async function POST(
     } else {
       return NextResponse.json(
         { success: false, message: "未対応のショップです" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -45,7 +45,7 @@ export async function POST(
         message: "スクレイピング中にエラーが発生しました",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

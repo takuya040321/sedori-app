@@ -1,3 +1,4 @@
+// src\components\layout\PageContainer.tsx
 "use client";
 
 import { motion } from "framer-motion";

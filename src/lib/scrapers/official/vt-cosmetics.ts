@@ -45,7 +45,7 @@ export async function scrapeVT(): Promise<ShopData> {
         imageUrl,
         price: isNaN(priceNum as number) ? undefined : priceNum,
         salePrice: isNaN(salePriceNum as number) ? undefined : salePriceNum,
-        asin: undefined,
+        asins: undefined,
         updatedAt: new Date().toISOString(),
       });
     });
