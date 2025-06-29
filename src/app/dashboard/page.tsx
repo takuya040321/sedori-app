@@ -19,8 +19,14 @@ export default async function DashboardPage() {
       : new Date();
 
   return (
-    <div className="h-full">
+    <div className="min-h-screen">
       <PageContainer>
+        {/* ヘッダー */}
+        <div className="text-center space-y-4 mb-8">
+          <h1 className="text-4xl font-bold text-gradient">ShopScraper</h1>
+          <p className="text-lg text-gray-600">商品管理システム - ダッシュボード</p>
+        </div>
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard

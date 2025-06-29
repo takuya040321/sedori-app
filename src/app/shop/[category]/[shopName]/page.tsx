@@ -16,7 +16,7 @@ export default async function ShopPage({ params }: Props) {
   const shopData = await loadShopData(category, shopName);
 
   return (
-    <div className="h-full">
+    <div className="min-h-screen">
       <PageContainer>
         <ShopPageClient category={category} shopName={shopName} shopData={shopData} />
       </PageContainer>

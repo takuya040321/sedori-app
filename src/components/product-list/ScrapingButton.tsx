@@ -99,49 +99,44 @@ export function ScrapingButton({ category, shopName, onScraped }: ScrapingButton
     }
   };
 
-  const getButtonVariant = () => {
+  const getButtonClass = () => {
     switch (state) {
       case "success":
-        return "default";
+        return "bg-green-600 hover:bg-green-700 text-white";
       case "error":
-        return "destructive";
+        return "bg-red-600 hover:bg-red-700 text-white";
+      case "loading":
+        return "bg-blue-600 text-white cursor-not-allowed";
       default:
-        return "gradient";
+        return "minimal-button";
     }
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <motion.div
-        whileHover={{ scale: state === "idle" ? 1.05 : 1 }}
-        whileTap={{ scale: state === "idle" ? 0.95 : 1 }}
+        whileHover={{ scale: state === "idle" ? 1.02 : 1 }}
+        whileTap={{ scale: state === "idle" ? 0.98 : 1 }}
       >
         <Button
-          variant={getButtonVariant() as any}
-          size="lg"
           onClick={handleScrape}
           disabled={state === "loading"}
-          className={`relative overflow-hidden ${
-            state === "success"
-              ? "gradient-secondary"
-              : state === "error"
-                ? "bg-red-500 hover:bg-red-600"
-                : "gradient-primary"
-          } transition-all duration-300`}
+          className={`${getButtonClass()} transition-all duration-300 shadow-md hover:shadow-lg`}
+          size="lg"
         >
-          <span className="relative z-10 flex items-center gap-2">{getButtonContent()}</span>
+          <span className="flex items-center gap-2">{getButtonContent()}</span>
         </Button>
       </motion.div>
 
-      {/* Status Message */}
+      {/* ステータスメッセージ */}
       <AnimatePresence>
         {message && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`text-sm text-center ${
-              state === "success" ? "text-green-400" : "text-red-400"
+            className={`text-sm text-center font-medium ${
+              state === "success" ? "text-green-600" : "text-red-600"
             }`}
           >
             {message}

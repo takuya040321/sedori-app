@@ -18,26 +18,28 @@ export default function ShopPageClient({ category, shopName, shopData }: ShopPag
   return (
     <div className="space-y-6">
       {/* ヘッダー部分 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gradient mb-2">{shopName} 商品一覧</h2>
-          <p className="text-gray-400">
-            最終更新:{" "}
-            {shopData?.lastUpdated
-              ? new Date(shopData.lastUpdated).toLocaleString("ja-JP")
-              : "データなし"}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <ScrapingButton
-            category={category}
-            shopName={shopName}
-            onScraped={() => {
-              if (tableRef.current && tableRef.current.mutate) {
-                tableRef.current.mutate();
-              }
-            }}
-          />
+      <div className="minimal-card p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gradient mb-2">{shopName.toUpperCase()} 商品一覧</h2>
+            <p className="text-gray-600">
+              最終更新:{" "}
+              {shopData?.lastUpdated
+                ? new Date(shopData.lastUpdated).toLocaleString("ja-JP")
+                : "データなし"}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <ScrapingButton
+              category={category}
+              shopName={shopName}
+              onScraped={() => {
+                if (tableRef.current && tableRef.current.mutate) {
+                  tableRef.current.mutate();
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 

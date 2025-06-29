@@ -2,8 +2,6 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle, AlertCircle, Clock, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const activities = [
   {
@@ -56,13 +54,13 @@ const getActivityIcon = (type: string) => {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "success":
-      return <Badge variant="success">成功</Badge>;
+      return <span className="status-success">成功</span>;
     case "warning":
-      return <Badge variant="warning">警告</Badge>;
+      return <span className="status-warning">警告</span>;
     case "error":
-      return <Badge variant="destructive">エラー</Badge>;
+      return <span className="status-error">エラー</span>;
     default:
-      return <Badge>不明</Badge>;
+      return <span className="status-success">不明</span>;
   }
 };
 
@@ -73,44 +71,43 @@ export function RecentActivity() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.6 }}
     >
-      <Card className="glass-card border-white/20">
-        <CardHeader>
-          <CardTitle className="text-gradient">最新アクティビティ</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {activities.map((activity, index) => (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors"
+      <div className="minimal-card p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">最新アクティビティ</h3>
+        <div className="space-y-4">
+          {activities.map((activity, index) => (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+              className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <div
+                className={`p-2 rounded-xl ${
+                  activity.status === "success"
+                    ? "bg-green-100 text-green-600"
+                    : activity.status === "warning"
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-red-100 text-red-600"
+                }`}
               >
-                <div
-                  className={`p-2 rounded-lg ${
-                    activity.status === "success"
-                      ? "bg-green-500/20 text-green-400"
-                      : activity.status === "warning"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-red-500/20 text-red-400"
-                  }`}
-                >
-                  {getActivityIcon(activity.type)}
-                </div>
+                {getActivityIcon(activity.type)}
+              </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-white">{activity.shop}</span>
-                    {getStatusBadge(activity.status)}
-                  </div>
-                  <p className="text-sm text-gray-400 truncate">{activity.message}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium text-gray-900">{activity.shop}</span>
+                  {getStatusBadge(activity.status)}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                <p className="text-sm text-gray-600 truncate">{activity.message}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(activity.timestamp).toLocaleString("ja-JP")}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
     </motion.div>
   );
 }

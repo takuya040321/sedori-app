@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Store, ChevronRight, Menu, X, Package, ShoppingBag } from "lucide-react";
+import { Home, Store, ChevronRight, Menu, X, Package, ShoppingBag, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -70,11 +70,10 @@ const navigation: NavItem[] = [
       },
     ],
   },
-  // ここにASIN一括登録を追加
   {
     title: "ASIN一括登録",
     href: "/asin-upload",
-    icon: <Package className="w-5 h-5 text-blue-400" />,
+    icon: <Upload className="w-5 h-5" />,
   },
 ];
 
@@ -98,25 +97,26 @@ export function Sidebar() {
       <div className="space-y-1">
         {item.href ? (
           <Link href={item.href}>
-            <div
+            <motion.div
+              whileHover={{ x: 2 }}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                 level > 0 && "ml-6",
                 isActive
-                  ? "gradient-primary text-white shadow-lg glow-effect"
-                  : "text-gray-300 hover:text-white hover:bg-white/10",
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
               )}
             >
               {item.icon}
               {!isCollapsed && <span className="truncate">{item.title}</span>}
-            </div>
+            </motion.div>
           </Link>
         ) : (
           <button
             onClick={() => hasChildren && toggleExpanded(item.title)}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full",
-              "text-gray-300 hover:text-white hover:bg-white/10",
+              "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full",
+              "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
             )}
           >
             {item.icon}
@@ -136,14 +136,21 @@ export function Sidebar() {
           </button>
         )}
 
-        {/* サブメニュー展開部：アニメーションなし */}
-        {hasChildren && isExpanded && !isCollapsed && (
-          <div className="space-y-1">
-            {item.children?.map((child) => (
-              <NavItemComponent key={child.title} item={child} level={level + 1} />
-            ))}
-          </div>
-        )}
+        {/* サブメニュー */}
+        <AnimatePresence>
+          {hasChildren && isExpanded && !isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-1"
+            >
+              {item.children?.map((child) => (
+                <NavItemComponent key={child.title} item={child} level={level + 1} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -151,10 +158,10 @@ export function Sidebar() {
   return (
     <motion.div
       animate={{ width: isCollapsed ? 80 : 280 }}
-      className="glass-card border-r border-white/10 h-screen flex flex-col"
+      className="bg-white border-r border-gray-200 h-screen flex flex-col shadow-sm"
     >
-      {/* Header */}
-      <div className="p-4 border-b border-white/10">
+      {/* ヘッダー */}
+      <div className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <AnimatePresence>
             {!isCollapsed && (
@@ -162,14 +169,14 @@ export function Sidebar() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-3"
               >
-                <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-                  <Store className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-md">
+                  <Store className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-gradient font-bold text-lg">ShopScraper</h1>
-                  <p className="text-xs text-gray-400">商品管理システム</p>
+                  <h1 className="text-gradient font-bold text-xl">ShopScraper</h1>
+                  <p className="text-xs text-gray-500">商品管理システム</p>
                 </div>
               </motion.div>
             )}
@@ -178,22 +185,22 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hover:bg-white/10"
+            className="hover:bg-gray-100 rounded-xl"
           >
             {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
           </Button>
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* ナビゲーション */}
       <div className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => (
           <NavItemComponent key={item.title} item={item} />
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-white/10">
+      {/* フッター */}
+      <div className="p-4 border-t border-gray-100">
         <AnimatePresence>
           {!isCollapsed && (
             <motion.div
