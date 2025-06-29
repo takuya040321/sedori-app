@@ -99,18 +99,18 @@
 
 /* カスタムスクロールバー */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -155,6 +155,27 @@
   @apply bg-gray-50/50;
 }
 
+/* 列幅調整可能なテーブル */
+.minimal-table th {
+  resize: horizontal;
+  overflow: hidden;
+  min-width: 80px;
+  position: relative;
+}
+
+.minimal-table th:hover {
+  @apply bg-gray-100;
+}
+
+/* 固定ヘッダー */
+.minimal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
 /* ステータスバッジ */
 .status-success {
   @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
@@ -175,4 +196,21 @@
 
 .progress-fill {
   @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
+}
+
+/* テーブル列のリサイズハンドル */
+.minimal-table th::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.minimal-table th:hover::after {
+  background: #3b82f6;
+  opacity: 0.3;
 }

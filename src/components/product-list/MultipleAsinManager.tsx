@@ -157,7 +157,7 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                               <AlertTriangle className="w-3 h-3 text-red-500" title="危険物" />
                             )}
                             {asinInfo.isPartnerCarrierUnavailable && (
-                              <Truck className="w-3 h-3 text-orange-500" title="パートナーキャリア不可" />
+                              <Truck className="w-3 h-3 text-orange-500" title="ﾊﾟｰｷｬﾘ不可" />
                             )}
                             {needsManualInput && (
                               <Edit className="w-3 h-3 text-amber-500" title="手動入力が必要" />
@@ -184,9 +184,9 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                               checked={asinInfo.isPartnerCarrierUnavailable || false}
                               onChange={(e) => onPartnerCarrierChange(productIndex, asinIndex, e.target.checked)}
                               className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                              title="パートナーキャリア不可"
+                              title="ﾊﾟｰｷｬﾘ不可"
                             />
-                            <span className="text-xs text-gray-500">PC不可</span>
+                            <span className="text-xs text-gray-500">ﾊﾟｰｷｬﾘ</span>
                           </div>
                           
                           {/* 削除ボタン */}

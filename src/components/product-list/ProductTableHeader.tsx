@@ -23,10 +23,11 @@ export const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({
       : <ChevronDown className="w-4 h-4 text-blue-600" />;
   };
 
-  const SortableHeader: React.FC<{ field: SortField; children: React.ReactNode }> = ({ field, children }) => (
+  const SortableHeader: React.FC<{ field: SortField; children: React.ReactNode; className?: string }> = ({ field, children, className = "" }) => (
     <th 
-      className="cursor-pointer hover:bg-gray-100 transition-colors"
+      className={`cursor-pointer hover:bg-gray-100 transition-colors resize-x overflow-hidden ${className}`}
       onClick={() => onSort(field)}
+      style={{ minWidth: '80px' }}
     >
       <div className="flex items-center gap-1 justify-center">
         {children}
@@ -35,23 +36,31 @@ export const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({
     </th>
   );
 
+  const ResizableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
+    <th className={`resize-x overflow-hidden ${className}`} style={{ minWidth: '80px' }}>
+      <div className="flex items-center justify-center">
+        {children}
+      </div>
+    </th>
+  );
+
   return (
-    <thead>
+    <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
       <tr>
-        <th className="w-20">画像</th>
-        <SortableHeader field="name">
-          <span className="min-w-[200px] block">商品名</span>
+        <ResizableHeader className="w-20">画像</ResizableHeader>
+        <SortableHeader field="name" className="min-w-[200px]">
+          <span>商品名</span>
         </SortableHeader>
-        <SortableHeader field="price">
-          <span className="w-24 block">価格</span>
+        <SortableHeader field="price" className="w-24">
+          <span>価格</span>
         </SortableHeader>
-        <th className="w-32">仕入価格</th>
-        <th className="w-32">ASIN管理</th>
-        <th className="w-16">危険物</th>
-        <th className="w-16">パートナー<br />キャリア不可</th>
-        <th className="w-16">非表示</th>
-        <SortableHeader field="memo">
-          <span className="w-32 block">メモ</span>
+        <ResizableHeader className="w-32">仕入価格</ResizableHeader>
+        <ResizableHeader className="w-32">ASIN管理</ResizableHeader>
+        <ResizableHeader className="w-16">危険物</ResizableHeader>
+        <ResizableHeader className="w-16">ﾊﾟｰｷｬﾘ</ResizableHeader>
+        <ResizableHeader className="w-16">非表示</ResizableHeader>
+        <SortableHeader field="memo" className="w-32">
+          <span>メモ</span>
         </SortableHeader>
       </tr>
     </thead>

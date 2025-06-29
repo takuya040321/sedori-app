@@ -101,8 +101,8 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
 
         {/* 商品テーブル */}
         <div className="minimal-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="minimal-table">
+          <div className="overflow-auto max-h-[70vh]" style={{ scrollbarWidth: 'thin' }}>
+            <table className="minimal-table w-full table-fixed">
               <ProductTableHeader
                 sortField={sortField}
                 sortDirection={sortDirection}
@@ -177,23 +177,23 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 機能説明 */}
         <div className="minimal-card p-6 bg-amber-50 border-amber-200">
           <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-            🔧 新機能について
+            🔧 テーブル機能について
           </h4>
           <div className="text-sm text-amber-800 space-y-2">
             <p>
-              • <strong>複数ASIN管理</strong>: 1つの商品に対して複数のASINを登録できます
+              • <strong>列幅調整</strong>: 各列の境界をドラッグして幅を調整できます
             </p>
             <p>
-              • <strong>パートナーキャリア不可</strong>: 配送制限のあるASINを管理できます（オレンジ色で表示）
+              • <strong>固定ヘッダー</strong>: スクロール時もヘッダーが表示されます
             </p>
             <p>
-              • <strong>並び替え機能</strong>: 各列のヘッダーをクリックして昇順・降順で並び替え
+              • <strong>並び替え</strong>: 列ヘッダーをクリックして昇順・降順で並び替え
             </p>
             <p>
-              • <strong>検索・フィルター</strong>: 商品名やメモでの検索、価格範囲やASIN有無でのフィルタリング
+              • <strong>ﾊﾟｰｷｬﾘ</strong>: パートナーキャリア不可の略称（オレンジ色で表示）
             </p>
             <p>
-              • <strong>色分け表示</strong>: 危険物（赤）、パートナーキャリア不可（オレンジ）、両方（グラデーション）
+              • <strong>色分け表示</strong>: 危険物（赤）、ﾊﾟｰｷｬﾘ不可（オレンジ）、両方（グラデーション）
             </p>
           </div>
         </div>
