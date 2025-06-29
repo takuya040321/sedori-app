@@ -77,8 +77,8 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         )}
 
         {/* 商品テーブル */}
-        <div className="w-full overflow-x-auto overflow-y-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-xs">
+        <div className="w-full overflow-x-auto overflow-y-auto max-h-[80vh]">
+          <table className="min-w-full divide-y divide-gray-200 text-xs table-fixed">
             <ProductTableHeader />
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product, index) => (
@@ -103,26 +103,26 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 価格計算説明 */}
         {shopPricingConfig && (
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h4 className="font-medium text-blue-800 mb-2">価格計算について</h4>
+            <h4 className="font-medium text-blue-800 mb-2">💰 価格計算について</h4>
             <div className="text-sm text-blue-700 space-y-1">
               {shopPricingConfig.priceCalculationType === 'fixed_discount' && (
                 <p>
-                  • このショップでは価格から{shopPricingConfig.fixedDiscount}円を差し引いた金額で利益計算を行います
+                  • <strong>{shopName.toUpperCase()}</strong>: 価格から<strong>{shopPricingConfig.fixedDiscount}円</strong>を差し引いた金額で利益計算
                 </p>
               )}
               {shopPricingConfig.priceCalculationType === 'user_configurable' && (
                 <>
                   <p>
-                    • 基本割引: セール価格から{shopPricingConfig.percentageDiscount}%割引
-                  </p>
-                  <p>
-                    • 追加割引: 上記設定で任意の割引率を追加可能
+                    • <strong>{shopName.toUpperCase()}</strong>: セール価格から<strong>{shopPricingConfig.percentageDiscount}%基本割引</strong> + <strong>ユーザー設定割引</strong>
                   </p>
                   <p>
                     • 最終仕入れ価格 = セール価格 × (100% - 基本割引% - 追加割引%)
                   </p>
                 </>
               )}
+              <p className="text-xs mt-2 text-blue-600">
+                💡 仕入価格列で各商品の割引詳細を確認できます
+              </p>
             </div>
           </div>
         )}
