@@ -24,15 +24,13 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
     const {
       products,
       isLoading,
-      feeInfos,
-      asinInputs,
-      loadingIndexes,
-      handleAsinChange,
-      handleAsinBlur,
+      mutate,
+      loadingProductIndexes,
       handleHiddenChange,
       handleMemoChange,
+      handleAsinAdd,
+      handleAsinRemove,
       handleDangerousGoodsChange,
-      mutate,
     } = useProductTable(category, shopName, initialProducts);
 
     const { userDiscountSettings, updateDiscountSetting, getDiscountSetting } = useUserDiscountSettings();
@@ -96,16 +94,14 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                     key={product.name}
                     product={product}
                     rowIndex={index}
-                    asinInput={asinInputs[index] || ""}
-                    feeInfo={feeInfos[index]}
-                    isLoadingFee={loadingIndexes.includes(index)}
-                    onAsinChange={handleAsinChange}
-                    onAsinBlur={handleAsinBlur}
                     onHiddenChange={handleHiddenChange}
                     onMemoChange={handleMemoChange}
+                    onAsinAdd={handleAsinAdd}
+                    onAsinRemove={handleAsinRemove}
                     onDangerousGoodsChange={handleDangerousGoodsChange}
                     shopPricingConfig={shopPricingConfig}
                     userDiscountSettings={userDiscountSettings}
+                    isLoadingAsins={loadingProductIndexes.includes(index)}
                   />
                 ))}
               </tbody>
@@ -145,17 +141,23 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 機能説明 */}
         <div className="minimal-card p-6 bg-amber-50 border-amber-200">
           <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-            ⚠️ 危険物・メモ機能について
+            🔧 複数ASIN管理機能について
           </h4>
           <div className="text-sm text-amber-800 space-y-2">
             <p>
-              • <strong>危険物チェック</strong>: FBA納品不可の商品にチェックを入れると、その行がグレーアウトされます
+              • <strong>複数ASIN登録</strong>: 1つの商品に対して複数のASINを登録できます
             </p>
             <p>
-              • <strong>メモ機能</strong>: 各商品に個別のメモを入力できます（1秒後に自動保存）
+              • <strong>個別利益計算</strong>: 各ASINごとに利益額・利益率・ROIを自動計算
             </p>
             <p>
-              • <strong>視覚的表示</strong>: 危険物にチェックが入った商品は画像に警告アイコンが表示されます
+              • <strong>危険物管理</strong>: ASINごとに危険物フラグを設定可能
+            </p>
+            <p>
+              • <strong>展開表示</strong>: ASIN一覧をクリックして詳細情報を確認
+            </p>
+            <p>
+              • <strong>簡単削除</strong>: 不要なASINは個別に削除可能
             </p>
           </div>
         </div>

@@ -11,55 +11,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
   });
 
   const products: Product[] = data?.data?.products ?? [];
-  const [feeInfos, setFeeInfos] = useState<(AsinInfo | undefined)[]>([]);
-  const [asinInputs, setAsinInputs] = useState<string[]>([]);
-  const [loadingIndexes, setLoadingIndexes] = useState<number[]>([]);
-
-  useEffect(() => {
-    setAsinInputs(products.map((p) => (p.asins && p.asins[0]?.asin) || ""));
-    setFeeInfos(Array(products.length).fill(undefined));
-  }, [products]);
-
-  const handleAsinChange = (_rowIndex: number, value: string) => {
-    const upper = value.toUpperCase();
-    const filtered = upper.replace(/[^A-Z0-9]/g, "").slice(0, 10);
-    const newInputs = [...asinInputs];
-    newInputs[_rowIndex] = filtered;
-    setAsinInputs(newInputs);
-  };
-
-  const handleAsinBlur = async (_rowIndex: number) => {
-    const asin = asinInputs[_rowIndex];
-    if (asin.length === 10) {
-      await fetch(`/api/products/${category}/${shopName}/upload-asin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ index: _rowIndex, asin }),
-      });
-      setLoadingIndexes((prev) => [...prev, _rowIndex]);
-      
-      // ブランド名をショップ名から推定（実際の実装では適切なブランドマッピングが必要）
-      const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
-      
-      try {
-        const keepaInfo = await fetchASINInfo(asin, brand);
-        setFeeInfos((prev) => {
-          const next = [...prev];
-          next[_rowIndex] = keepaInfo;
-          return next;
-        });
-      } catch (error) {
-        console.error("Failed to fetch ASIN info:", error);
-        setFeeInfos((prev) => {
-          const next = [...prev];
-          next[_rowIndex] = undefined;
-          return next;
-        });
-      } finally {
-        setLoadingIndexes((prev) => prev.filter((i) => i !== _rowIndex));
-      }
-    }
-  };
+  const [loadingProductIndexes, setLoadingProductIndexes] = useState<number[]>([]);
 
   const handleHiddenChange = (_rowIndex: number, _checked: boolean) => {
     fetch(`/api/products/${category}/${shopName}/update-hidden`, {
@@ -83,28 +35,90 @@ export function useProductTable(category: string, shopName: string, initialProdu
     }
   };
 
-  // 危険物フラグ更新処理
-  const handleDangerousGoodsChange = async (_rowIndex: number, isDangerousGoods: boolean) => {
-    try {
-      // ASIN情報を更新
-      const asin = asinInputs[_rowIndex];
-      if (asin.length === 10) {
-        const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
-        await fetch(`/api/asin-dangerous-goods`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ asin, brand, isDangerousGoods }),
-        });
+  // ASIN追加処理
+  const handleAsinAdd = async (_rowIndex: number, asin: string) => {
+    if (asin.length !== 10) return;
 
-        // ローカル状態も更新
-        setFeeInfos((prev) => {
-          const next = [...prev];
-          if (next[_rowIndex]) {
-            next[_rowIndex] = { ...next[_rowIndex]!, isDangerousGoods };
-          }
-          return next;
-        });
-      }
+    setLoadingProductIndexes(prev => [...prev, _rowIndex]);
+
+    try {
+      // ブランド名をショップ名から推定
+      const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
+      
+      // ASIN情報を取得
+      const asinInfo = await fetchASINInfo(asin, brand);
+      
+      // 商品のASIN配列に追加
+      await fetch(`/api/products/${category}/${shopName}/add-asin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productIndex: _rowIndex, 
+          asinInfo 
+        }),
+      });
+
+      // データを再取得
+      mutate();
+    } catch (error) {
+      console.error("Failed to add ASIN:", error);
+    } finally {
+      setLoadingProductIndexes(prev => prev.filter(i => i !== _rowIndex));
+    }
+  };
+
+  // ASIN削除処理
+  const handleAsinRemove = async (_rowIndex: number, asinIndex: number) => {
+    try {
+      await fetch(`/api/products/${category}/${shopName}/remove-asin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productIndex: _rowIndex, 
+          asinIndex 
+        }),
+      });
+
+      // データを再取得
+      mutate();
+    } catch (error) {
+      console.error("Failed to remove ASIN:", error);
+    }
+  };
+
+  // 危険物フラグ更新処理
+  const handleDangerousGoodsChange = async (_rowIndex: number, asinIndex: number, isDangerousGoods: boolean) => {
+    try {
+      const product = products[_rowIndex];
+      const asinInfo = product.asins?.[asinIndex];
+      
+      if (!asinInfo) return;
+
+      const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
+      
+      await fetch(`/api/asin-dangerous-goods`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          asin: asinInfo.asin, 
+          brand, 
+          isDangerousGoods 
+        }),
+      });
+
+      // 商品データの危険物フラグも更新
+      await fetch(`/api/products/${category}/${shopName}/update-asin-dangerous`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productIndex: _rowIndex, 
+          asinIndex, 
+          isDangerousGoods 
+        }),
+      });
+
+      // データを再取得
+      mutate();
     } catch (error) {
       console.error("Failed to update dangerous goods flag:", error);
     }
@@ -114,13 +128,11 @@ export function useProductTable(category: string, shopName: string, initialProdu
     products,
     isLoading,
     mutate,
-    feeInfos,
-    asinInputs,
-    loadingIndexes,
-    handleAsinChange,
-    handleAsinBlur,
+    loadingProductIndexes,
     handleHiddenChange,
     handleMemoChange,
+    handleAsinAdd,
+    handleAsinRemove,
     handleDangerousGoodsChange,
   };
 }

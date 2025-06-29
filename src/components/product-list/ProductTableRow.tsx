@@ -2,46 +2,37 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
-import { calculateProfitWithShopPricing, calculateActualCost } from "@/lib/pricing-calculator";
-import { AlertTriangle, Package } from "lucide-react";
+import { calculateActualCost } from "@/lib/pricing-calculator";
+import { AlertTriangle } from "lucide-react";
+import { MultipleAsinManager } from "./MultipleAsinManager";
 
 interface Props {
   product: Product;
   rowIndex: number;
-  asinInput: string;
-  feeInfo?: AsinInfo;
-  isLoadingFee: boolean;
-  onAsinChange: (_rowIndex: number, _value: string) => void;
-  onAsinBlur: (_rowIndex: number) => void;
   onHiddenChange: (_rowIndex: number, _checked: boolean) => void;
   onMemoChange: (_rowIndex: number, _memo: string) => void;
-  onDangerousGoodsChange: (_rowIndex: number, _checked: boolean) => void;
+  onAsinAdd: (_rowIndex: number, _asin: string) => void;
+  onAsinRemove: (_rowIndex: number, _asinIndex: number) => void;
+  onDangerousGoodsChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
+  isLoadingAsins?: boolean;
 }
 
 export const ProductTableRow: React.FC<Props> = ({
   product,
   rowIndex: _rowIndex,
-  asinInput,
-  feeInfo,
-  isLoadingFee,
-  onAsinChange,
-  onAsinBlur,
   onHiddenChange,
   onMemoChange,
+  onAsinAdd,
+  onAsinRemove,
   onDangerousGoodsChange,
   shopPricingConfig,
   userDiscountSettings = {},
+  isLoadingAsins = false,
 }) => {
   const [memoValue, setMemoValue] = useState(product.memo || "");
-  const [isDangerousGoods, setIsDangerousGoods] = useState(feeInfo?.isDangerousGoods || false);
   const memoTimeoutRef = useRef<NodeJS.Timeout>();
-
-  // feeInfoが更新されたときにisDangerousGoodsを同期
-  useEffect(() => {
-    setIsDangerousGoods(feeInfo?.isDangerousGoods || false);
-  }, [feeInfo?.isDangerousGoods]);
 
   // メモの変更をデバウンス処理
   const handleMemoChange = (value: string) => {
@@ -57,32 +48,6 @@ export const ProductTableRow: React.FC<Props> = ({
       onMemoChange(_rowIndex, value);
     }, 1000);
   };
-
-  // 危険物チェックボックスの変更
-  const handleDangerousGoodsChange = (checked: boolean) => {
-    setIsDangerousGoods(checked);
-    onDangerousGoodsChange(_rowIndex, checked);
-  };
-
-  // 利益計算（ショップ別価格設定を考慮）
-  const profitResult = React.useMemo(() => {
-    if (!feeInfo || !shopPricingConfig || 
-        feeInfo.price === undefined || 
-        feeInfo.sellingFee === null || 
-        feeInfo.fbaFee === null) {
-      return null;
-    }
-
-    return calculateProfitWithShopPricing(
-      product.price,
-      product.salePrice,
-      feeInfo.price,
-      feeInfo.sellingFee,
-      feeInfo.fbaFee,
-      shopPricingConfig,
-      userDiscountSettings
-    );
-  }, [product.price, product.salePrice, feeInfo, shopPricingConfig, userDiscountSettings]);
 
   // 仕入価格表示の生成
   const getPurchasePriceDisplay = () => {
@@ -149,10 +114,13 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
+  // 危険物があるかチェック
+  const hasDangerousGoods = product.asins?.some(asin => asin.isDangerousGoods) || false;
+
   // 行のスタイル（危険物の場合はグレーアウト）
   const rowClassName = `border-b transition ${
-    isDangerousGoods 
-      ? "bg-gray-100 text-gray-500 opacity-60" 
+    hasDangerousGoods 
+      ? "bg-red-50 text-gray-600 opacity-80" 
       : "bg-background text-foreground hover:bg-accent/30"
   }`;
 
@@ -172,7 +140,7 @@ export const ProductTableRow: React.FC<Props> = ({
               <AvatarFallback className="text-[10px]">No</AvatarFallback>
             )}
           </Avatar>
-          {isDangerousGoods && (
+          {hasDangerousGoods && (
             <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
               <AlertTriangle className="w-3 h-3 text-white" />
             </div>
@@ -208,149 +176,34 @@ export const ProductTableRow: React.FC<Props> = ({
         {getPurchasePriceDisplay()}
       </td>
       
-      {/* 5. Amazon商品名 */}
+      {/* 5. ASIN管理 */}
       <td className="px-2 py-1">
-        <div className="max-w-[150px] truncate text-sm" title={feeInfo?.productName || ""}>
-          {asinInput.length !== 10
-            ? "-"
-            : isLoadingFee
-              ? "取得中…"
-              : feeInfo
-                ? feeInfo.productName
-                : "ASIN情報なし"}
-        </div>
-      </td>
-      
-      {/* 6. ASIN */}
-      <td className="px-2 py-1">
-        <input
-          type="text"
-          className="border px-1 py-0.5 rounded w-20 bg-white text-black text-xs"
-          value={asinInput}
-          maxLength={10}
-          onChange={(e) => onAsinChange(_rowIndex, e.target.value)}
-          onBlur={() => onAsinBlur(_rowIndex)}
-          placeholder="ASIN"
-          pattern="[A-Z0-9]{10}"
-          inputMode="text"
-          autoComplete="off"
-          required
-          title="ASINは大文字半角英数字10桁で入力してください"
+        <MultipleAsinManager
+          productIndex={_rowIndex}
+          productPrice={product.price}
+          productSalePrice={product.salePrice}
+          asins={product.asins || []}
+          onAsinAdd={onAsinAdd}
+          onAsinRemove={onAsinRemove}
+          onDangerousGoodsChange={onDangerousGoodsChange}
+          shopPricingConfig={shopPricingConfig}
+          userDiscountSettings={userDiscountSettings}
+          isLoading={isLoadingAsins}
         />
       </td>
       
-      {/* 7. 月間販売個数 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {asinInput.length === 10
-            ? isLoadingFee
-              ? "取得中"
-              : feeInfo?.soldUnit !== undefined
-                ? `${feeInfo.soldUnit.toLocaleString()}`
-                : "-"
-            : "-"}
-        </div>
-      </td>
-      
-      {/* 8. Amazon販売価格 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {asinInput.length === 10
-            ? isLoadingFee
-              ? "取得中"
-              : feeInfo?.price !== undefined
-                ? `${feeInfo.price.toLocaleString()}`
-                : "-"
-            : "-"}
-        </div>
-      </td>
-      
-      {/* 9. 販売手数料 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {asinInput.length === 10
-            ? isLoadingFee
-              ? "取得中"
-              : feeInfo?.sellingFee !== undefined
-                ? `${feeInfo.sellingFee}%`
-                : "-"
-            : "-"}
-        </div>
-      </td>
-      
-      {/* 10. FBA手数料 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {isLoadingFee
-            ? "取得中"
-            : feeInfo && feeInfo.fbaFee !== undefined
-              ? `${feeInfo.fbaFee.toLocaleString()}`
-              : "-"}
-        </div>
-      </td>
-      
-      {/* 11. 利益額 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {isLoadingFee
-            ? "取得中"
-            : profitResult
-              ? (
-                <span className={profitResult.profit >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                  {profitResult.profit.toLocaleString()}
-                </span>
-              )
-              : "-"}
-        </div>
-      </td>
-      
-      {/* 12. 利益率 */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {isLoadingFee
-            ? "取得中"
-            : profitResult
-              ? (
-                <span className={profitResult.profitMargin >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                  {Math.round(profitResult.profitMargin)}%
-                </span>
-              )
-              : "-"}
-        </div>
-      </td>
-
-      {/* 13. ROI */}
-      <td className="px-2 py-1 text-center">
-        <div className="text-sm">
-          {isLoadingFee
-            ? "取得中"
-            : profitResult
-              ? (
-                <span className={profitResult.roi >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                  {Math.round(profitResult.roi)}%
-                </span>
-              )
-              : "-"}
-        </div>
-      </td>
-      
-      {/* 14. 危険物チェックボックス */}
+      {/* 6. 危険物 */}
       <td className="px-2 py-1 text-center">
         <div className="flex items-center justify-center">
-          <input
-            type="checkbox"
-            checked={isDangerousGoods}
-            onChange={(e) => handleDangerousGoodsChange(e.target.checked)}
-            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-            title="FBA納品不可（危険物）"
-          />
-          {isDangerousGoods && (
-            <AlertTriangle className="w-3 h-3 text-red-500 ml-1" />
+          {hasDangerousGoods ? (
+            <AlertTriangle className="w-4 h-4 text-red-500" />
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
           )}
         </div>
       </td>
       
-      {/* 15. 非表示 */}
+      {/* 7. 非表示 */}
       <td className="px-2 py-1 text-center">
         <input
           type="checkbox"
@@ -360,7 +213,7 @@ export const ProductTableRow: React.FC<Props> = ({
         />
       </td>
       
-      {/* 16. メモ */}
+      {/* 8. メモ */}
       <td className="px-2 py-1">
         <input
           type="text"

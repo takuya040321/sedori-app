@@ -4,7 +4,7 @@ export interface Product {
   imageUrl: string;
   price: number;
   salePrice?: number;
-  asins?: AsinInfo[];
+  asins?: AsinInfo[]; // 複数ASIN対応（配列）
   updatedAt: string;
   hidden?: boolean;
   memo?: string; // ユーザーメモ追加
