@@ -20,7 +20,7 @@
           "fbaFee": null,
           "jan": [],
           "note": "手動入力が必要",
-          "isDangerousGoods": false,
+          "isDangerousGoods": true,
           "isPartnerCarrierUnavailable": false
         }
       ]
