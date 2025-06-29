@@ -158,7 +158,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
     }
   };
 
-  // ASIN追加処理
+  // ASIN追加処理（エラーハンドリング改善）
   const handleAsinAdd = async (_rowIndex: number, asin: string) => {
     if (asin.length !== 10) return;
 
@@ -168,11 +168,15 @@ export function useProductTable(category: string, shopName: string, initialProdu
       // ブランド名をショップ名から推定
       const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
       
-      // ASIN情報を取得
+      console.log(`Fetching ASIN info for: ${asin}, brand: ${brand}`);
+      
+      // ASIN情報を取得（404の場合は基本情報を作成）
       const asinInfo = await fetchASINInfo(asin, brand);
       
+      console.log(`ASIN info retrieved:`, asinInfo);
+      
       // 商品のASIN配列に追加
-      await fetch(`/api/products/${category}/${shopName}/add-asin`, {
+      const response = await fetch(`/api/products/${category}/${shopName}/add-asin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -181,10 +185,20 @@ export function useProductTable(category: string, shopName: string, initialProdu
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      console.log(`ASIN ${asin} successfully added to product ${_rowIndex}`);
+
       // データを再取得
       mutate();
     } catch (error) {
       console.error("Failed to add ASIN:", error);
+      
+      // ユーザーにエラーを表示（将来的にはtoast通知など）
+      alert(`ASIN登録に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoadingProductIndexes(prev => prev.filter(i => i !== _rowIndex));
     }

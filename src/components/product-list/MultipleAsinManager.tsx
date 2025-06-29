@@ -1,7 +1,7 @@
 // src/components/product-list/MultipleAsinManager.tsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, AlertTriangle, Package, ChevronDown, ChevronUp, Truck } from "lucide-react";
+import { Plus, Trash2, AlertTriangle, Package, ChevronDown, ChevronUp, Truck, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
@@ -133,6 +133,10 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                   } else if (asinInfo.isPartnerCarrierUnavailable) {
                     bgColor = "bg-orange-50 border-orange-200";
                   }
+
+                  // 手動入力が必要かチェック
+                  const needsManualInput = !asinInfo.productName || asinInfo.price === 0 || 
+                                         asinInfo.sellingFee === null || asinInfo.fbaFee === null;
                   
                   return (
                     <motion.div
@@ -154,6 +158,9 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                             )}
                             {asinInfo.isPartnerCarrierUnavailable && (
                               <Truck className="w-3 h-3 text-orange-500" title="パートナーキャリア不可" />
+                            )}
+                            {needsManualInput && (
+                              <Edit className="w-3 h-3 text-amber-500" title="手動入力が必要" />
                             )}
                           </div>
                         </div>
@@ -194,10 +201,23 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                         </div>
                       </div>
 
+                      {/* 手動入力が必要な場合の警告 */}
+                      {needsManualInput && (
+                        <div className="mb-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                          <div className="flex items-center gap-1">
+                            <Edit className="w-3 h-3" />
+                            <span className="font-medium">手動入力が必要</span>
+                          </div>
+                          <div className="text-xs mt-1">
+                            ASIN一括登録ページで詳細情報を入力してください
+                          </div>
+                        </div>
+                      )}
+
                       {/* 商品情報 */}
                       <div className="text-xs text-gray-600 mb-2">
                         <div className="truncate" title={asinInfo.productName}>
-                          {asinInfo.productName || "商品名取得中..."}
+                          {asinInfo.productName || "商品名未設定"}
                         </div>
                       </div>
 
@@ -206,7 +226,7 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                         <div>
                           <span className="text-gray-500">Amazon価格:</span>
                           <div className="font-medium">
-                            {asinInfo.price ? `${asinInfo.price.toLocaleString()}円` : "-"}
+                            {asinInfo.price ? `${asinInfo.price.toLocaleString()}円` : "未設定"}
                           </div>
                         </div>
                         <div>
@@ -218,19 +238,19 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                         <div>
                           <span className="text-gray-500">手数料:</span>
                           <div className="font-medium">
-                            {asinInfo.sellingFee !== null ? `${asinInfo.sellingFee}%` : "-"}
+                            {asinInfo.sellingFee !== null ? `${asinInfo.sellingFee}%` : "未設定"}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-500">FBA料:</span>
                           <div className="font-medium">
-                            {asinInfo.fbaFee !== null ? `${asinInfo.fbaFee.toLocaleString()}円` : "-"}
+                            {asinInfo.fbaFee !== null ? `${asinInfo.fbaFee.toLocaleString()}円` : "未設定"}
                           </div>
                         </div>
                       </div>
 
                       {/* 利益情報 */}
-                      {profitResult && (
+                      {profitResult && !needsManualInput && (
                         <div className="mt-2 pt-2 border-t border-gray-200">
                           <div className="grid grid-cols-3 gap-2 text-xs">
                             <div>
@@ -258,6 +278,13 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                               </div>
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* 利益計算不可の場合 */}
+                      {needsManualInput && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500">
+                          利益計算には詳細情報の入力が必要です
                         </div>
                       )}
                     </motion.div>

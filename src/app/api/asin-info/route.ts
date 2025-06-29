@@ -15,15 +15,36 @@ export async function GET(req: NextRequest) {
 
   try {
     const asinFilePath = path.join(process.cwd(), "src/data/asin", `${brand}.json`);
+    
+    // ファイルの存在確認
+    try {
+      await fs.access(asinFilePath);
+    } catch (error) {
+      console.log(`ASIN file not found: ${asinFilePath}`);
+      return NextResponse.json({ 
+        error: "ASIN情報が見つかりません",
+        details: "ASINデータファイルが存在しません" 
+      }, { status: 404 });
+    }
+
     const jsonStr = await fs.readFile(asinFilePath, "utf-8");
     const asinList = JSON.parse(jsonStr) as AsinInfo[];
     const info = asinList.find((item) => item.asin === asin);
 
     if (!info) {
-      return NextResponse.json({ error: "ASIN情報が見つかりません" }, { status: 404 });
+      console.log(`ASIN not found in file: ${asin}`);
+      return NextResponse.json({ 
+        error: "ASIN情報が見つかりません",
+        details: `ASIN ${asin} がデータベースに登録されていません`
+      }, { status: 404 });
     }
+    
     return NextResponse.json(info);
   } catch (e) {
-    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
+    console.error("ASIN info API error:", e);
+    return NextResponse.json({ 
+      error: "サーバーエラー",
+      details: e instanceof Error ? e.message : "Unknown error"
+    }, { status: 500 });
   }
 }
