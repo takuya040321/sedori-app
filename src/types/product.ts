@@ -22,6 +22,7 @@ export interface AsinInfo {
   jan: string[];
   note?: string;
   isDangerousGoods?: boolean; // FBA納品不可（危険物）フラグ追加
+  isPartnerCarrierUnavailable?: boolean; // パートナーキャリア不可フラグ追加
 }
 
 export interface ShopData {
@@ -53,7 +54,7 @@ export interface ActivityItem {
 }
 
 export type AsinInfoHeaderKey =
-  | keyof Omit<AsinInfo, "jan" | "note" | "sellingFee" | "fbaFee" | "isDangerousGoods">
+  | keyof Omit<AsinInfo, "jan" | "note" | "sellingFee" | "fbaFee" | "isDangerousGoods" | "isPartnerCarrierUnavailable">
   | "sellingFeeRaw"
   | "fbaFeeRaw"
   | "janRaw";
@@ -71,4 +72,21 @@ export interface ShopPricingConfig {
 // ユーザー設定割引情報
 export interface UserDiscountSettings {
   [shopKey: string]: number; // ショップキー: 割引率（%）
+}
+
+// 並び替え設定
+export type SortField = 'name' | 'price' | 'salePrice' | 'updatedAt' | 'memo';
+export type SortDirection = 'asc' | 'desc';
+
+// フィルタリング設定
+export interface FilterSettings {
+  search: string;
+  showHidden: boolean;
+  showDangerousGoods: boolean;
+  showPartnerCarrierUnavailable: boolean;
+  priceRange: {
+    min: number | null;
+    max: number | null;
+  };
+  hasAsin: boolean | null; // true: ASINあり, false: ASINなし, null: 全て
 }

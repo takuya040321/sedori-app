@@ -1,7 +1,7 @@
 // src/components/product-list/MultipleAsinManager.tsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, AlertTriangle, Package, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, AlertTriangle, Package, ChevronDown, ChevronUp, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
@@ -15,6 +15,7 @@ interface MultipleAsinManagerProps {
   onAsinAdd: (productIndex: number, asin: string) => void;
   onAsinRemove: (productIndex: number, asinIndex: number) => void;
   onDangerousGoodsChange: (productIndex: number, asinIndex: number, isDangerous: boolean) => void;
+  onPartnerCarrierChange: (productIndex: number, asinIndex: number, isUnavailable: boolean) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
   isLoading?: boolean;
@@ -28,6 +29,7 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
   onAsinAdd,
   onAsinRemove,
   onDangerousGoodsChange,
+  onPartnerCarrierChange,
   shopPricingConfig,
   userDiscountSettings = {},
   isLoading = false,
@@ -122,17 +124,23 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                 {asins.map((asinInfo, asinIndex) => {
                   const profitResult = calculateProfit(asinInfo);
                   
+                  // 背景色の決定
+                  let bgColor = "bg-white border-gray-200";
+                  if (asinInfo.isDangerousGoods && asinInfo.isPartnerCarrierUnavailable) {
+                    bgColor = "bg-gradient-to-r from-red-50 to-orange-50 border-red-300";
+                  } else if (asinInfo.isDangerousGoods) {
+                    bgColor = "bg-red-50 border-red-200";
+                  } else if (asinInfo.isPartnerCarrierUnavailable) {
+                    bgColor = "bg-orange-50 border-orange-200";
+                  }
+                  
                   return (
                     <motion.div
                       key={asinInfo.asin}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
-                      className={`p-2 rounded border ${
-                        asinInfo.isDangerousGoods 
-                          ? "bg-red-50 border-red-200" 
-                          : "bg-white border-gray-200"
-                      }`}
+                      className={`p-2 rounded border ${bgColor}`}
                     >
                       {/* ASIN基本情報 */}
                       <div className="flex items-center justify-between mb-2">
@@ -140,19 +148,40 @@ export const MultipleAsinManager: React.FC<MultipleAsinManagerProps> = ({
                           <span className="font-mono text-xs font-medium text-blue-600">
                             {asinInfo.asin}
                           </span>
-                          {asinInfo.isDangerousGoods && (
-                            <AlertTriangle className="w-3 h-3 text-red-500" />
-                          )}
+                          <div className="flex items-center gap-1">
+                            {asinInfo.isDangerousGoods && (
+                              <AlertTriangle className="w-3 h-3 text-red-500" title="危険物" />
+                            )}
+                            {asinInfo.isPartnerCarrierUnavailable && (
+                              <Truck className="w-3 h-3 text-orange-500" title="パートナーキャリア不可" />
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           {/* 危険物チェックボックス */}
-                          <input
-                            type="checkbox"
-                            checked={asinInfo.isDangerousGoods || false}
-                            onChange={(e) => onDangerousGoodsChange(productIndex, asinIndex, e.target.checked)}
-                            className="w-3 h-3 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                            title="危険物"
-                          />
+                          <div className="flex flex-col items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={asinInfo.isDangerousGoods || false}
+                              onChange={(e) => onDangerousGoodsChange(productIndex, asinIndex, e.target.checked)}
+                              className="w-3 h-3 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                              title="危険物"
+                            />
+                            <span className="text-xs text-gray-500">危険</span>
+                          </div>
+                          
+                          {/* パートナーキャリア不可チェックボックス */}
+                          <div className="flex flex-col items-center gap-1">
+                            <input
+                              type="checkbox"
+                              checked={asinInfo.isPartnerCarrierUnavailable || false}
+                              onChange={(e) => onPartnerCarrierChange(productIndex, asinIndex, e.target.checked)}
+                              className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                              title="パートナーキャリア不可"
+                            />
+                            <span className="text-xs text-gray-500">PC不可</span>
+                          </div>
+                          
                           {/* 削除ボタン */}
                           <Button
                             variant="ghost"

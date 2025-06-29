@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateActualCost } from "@/lib/pricing-calculator";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Truck } from "lucide-react";
 import { MultipleAsinManager } from "./MultipleAsinManager";
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   onAsinAdd: (_rowIndex: number, _asin: string) => void;
   onAsinRemove: (_rowIndex: number, _asinIndex: number) => void;
   onDangerousGoodsChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
+  onPartnerCarrierChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
   isLoadingAsins?: boolean;
@@ -27,6 +28,7 @@ export const ProductTableRow: React.FC<Props> = ({
   onAsinAdd,
   onAsinRemove,
   onDangerousGoodsChange,
+  onPartnerCarrierChange,
   shopPricingConfig,
   userDiscountSettings = {},
   isLoadingAsins = false,
@@ -116,13 +118,21 @@ export const ProductTableRow: React.FC<Props> = ({
 
   // 危険物があるかチェック
   const hasDangerousGoods = product.asins?.some(asin => asin.isDangerousGoods) || false;
+  
+  // パートナーキャリア不可があるかチェック
+  const hasPartnerCarrierUnavailable = product.asins?.some(asin => asin.isPartnerCarrierUnavailable) || false;
 
-  // 行のスタイル（危険物の場合はグレーアウト）
-  const rowClassName = `border-b transition ${
-    hasDangerousGoods 
-      ? "bg-red-50 text-gray-600 opacity-80" 
-      : "bg-background text-foreground hover:bg-accent/30"
-  }`;
+  // 行のスタイル（危険物・パートナーキャリア不可の場合は色分け）
+  let rowClassName = "border-b transition hover:bg-accent/30";
+  if (hasDangerousGoods && hasPartnerCarrierUnavailable) {
+    rowClassName += " bg-gradient-to-r from-red-50 to-orange-50";
+  } else if (hasDangerousGoods) {
+    rowClassName += " bg-red-50";
+  } else if (hasPartnerCarrierUnavailable) {
+    rowClassName += " bg-orange-50";
+  } else {
+    rowClassName += " bg-background text-foreground";
+  }
 
   return (
     <tr className={rowClassName}>
@@ -140,11 +150,18 @@ export const ProductTableRow: React.FC<Props> = ({
               <AvatarFallback className="text-[10px]">No</AvatarFallback>
             )}
           </Avatar>
-          {hasDangerousGoods && (
-            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
-              <AlertTriangle className="w-3 h-3 text-white" />
-            </div>
-          )}
+          <div className="absolute -top-1 -right-1 flex gap-1">
+            {hasDangerousGoods && (
+              <div className="bg-red-500 rounded-full p-1">
+                <AlertTriangle className="w-3 h-3 text-white" />
+              </div>
+            )}
+            {hasPartnerCarrierUnavailable && (
+              <div className="bg-orange-500 rounded-full p-1">
+                <Truck className="w-3 h-3 text-white" />
+              </div>
+            )}
+          </div>
         </div>
       </td>
       
@@ -186,6 +203,7 @@ export const ProductTableRow: React.FC<Props> = ({
           onAsinAdd={onAsinAdd}
           onAsinRemove={onAsinRemove}
           onDangerousGoodsChange={onDangerousGoodsChange}
+          onPartnerCarrierChange={onPartnerCarrierChange}
           shopPricingConfig={shopPricingConfig}
           userDiscountSettings={userDiscountSettings}
           isLoading={isLoadingAsins}
@@ -203,7 +221,18 @@ export const ProductTableRow: React.FC<Props> = ({
         </div>
       </td>
       
-      {/* 7. 非表示 */}
+      {/* 7. パートナーキャリア不可 */}
+      <td className="px-2 py-1 text-center">
+        <div className="flex items-center justify-center">
+          {hasPartnerCarrierUnavailable ? (
+            <Truck className="w-4 h-4 text-orange-500" />
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
+          )}
+        </div>
+      </td>
+      
+      {/* 8. 非表示 */}
       <td className="px-2 py-1 text-center">
         <input
           type="checkbox"
@@ -213,7 +242,7 @@ export const ProductTableRow: React.FC<Props> = ({
         />
       </td>
       
-      {/* 8. メモ */}
+      {/* 9. メモ */}
       <td className="px-2 py-1">
         <input
           type="text"

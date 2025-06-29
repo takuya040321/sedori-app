@@ -6,6 +6,7 @@ import { useUserDiscountSettings } from "@/hooks/useUserDiscountSettings";
 import { ProductTableRow } from "./ProductTableRow";
 import { ProductTableHeader } from "./ProductTableHeader";
 import { UserDiscountControl } from "./UserDiscountControl";
+import { SearchAndFilter } from "./SearchAndFilter";
 import { getShopPricingConfig, getShopKey } from "@/lib/pricing-config";
 
 export interface ProductTableProps {
@@ -23,14 +24,21 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
   ({ category, shopName, initialProducts }, ref) => {
     const {
       products,
+      allProducts,
       isLoading,
       mutate,
       loadingProductIndexes,
+      sortField,
+      sortDirection,
+      filters,
+      handleSort,
+      setFilters,
       handleHiddenChange,
       handleMemoChange,
       handleAsinAdd,
       handleAsinRemove,
       handleDangerousGoodsChange,
+      handlePartnerCarrierChange,
     } = useProductTable(category, shopName, initialProducts);
 
     const { userDiscountSettings, updateDiscountSetting, getDiscountSetting } = useUserDiscountSettings();
@@ -83,30 +91,58 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
           </div>
         )}
 
+        {/* 検索・フィルター */}
+        <SearchAndFilter
+          filters={filters}
+          onFiltersChange={setFilters}
+          totalCount={allProducts.length}
+          filteredCount={products.length}
+        />
+
         {/* 商品テーブル */}
         <div className="minimal-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="minimal-table">
-              <ProductTableHeader />
+              <ProductTableHeader
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
               <tbody>
-                {products.map((product, index) => (
-                  <ProductTableRow
-                    key={product.name}
-                    product={product}
-                    rowIndex={index}
-                    onHiddenChange={handleHiddenChange}
-                    onMemoChange={handleMemoChange}
-                    onAsinAdd={handleAsinAdd}
-                    onAsinRemove={handleAsinRemove}
-                    onDangerousGoodsChange={handleDangerousGoodsChange}
-                    shopPricingConfig={shopPricingConfig}
-                    userDiscountSettings={userDiscountSettings}
-                    isLoadingAsins={loadingProductIndexes.includes(index)}
-                  />
-                ))}
+                {products.map((product, index) => {
+                  // 元の配列でのインデックスを取得
+                  const originalIndex = allProducts.findIndex(p => 
+                    p.name === product.name && p.updatedAt === product.updatedAt
+                  );
+                  
+                  return (
+                    <ProductTableRow
+                      key={`${product.name}-${product.updatedAt}`}
+                      product={product}
+                      rowIndex={originalIndex}
+                      onHiddenChange={handleHiddenChange}
+                      onMemoChange={handleMemoChange}
+                      onAsinAdd={handleAsinAdd}
+                      onAsinRemove={handleAsinRemove}
+                      onDangerousGoodsChange={handleDangerousGoodsChange}
+                      onPartnerCarrierChange={handlePartnerCarrierChange}
+                      shopPricingConfig={shopPricingConfig}
+                      userDiscountSettings={userDiscountSettings}
+                      isLoadingAsins={loadingProductIndexes.includes(originalIndex)}
+                    />
+                  );
+                })}
               </tbody>
             </table>
           </div>
+          
+          {/* 検索結果が0件の場合 */}
+          {products.length === 0 && (
+            <div className="p-8 text-center text-gray-500">
+              <p className="text-lg font-medium mb-2">商品が見つかりません</p>
+              <p className="text-sm">検索条件やフィルターを変更してお試しください</p>
+            </div>
+          )}
         </div>
 
         {/* 価格計算説明 */}
@@ -141,23 +177,23 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 機能説明 */}
         <div className="minimal-card p-6 bg-amber-50 border-amber-200">
           <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-            🔧 複数ASIN管理機能について
+            🔧 新機能について
           </h4>
           <div className="text-sm text-amber-800 space-y-2">
             <p>
-              • <strong>複数ASIN登録</strong>: 1つの商品に対して複数のASINを登録できます
+              • <strong>複数ASIN管理</strong>: 1つの商品に対して複数のASINを登録できます
             </p>
             <p>
-              • <strong>個別利益計算</strong>: 各ASINごとに利益額・利益率・ROIを自動計算
+              • <strong>パートナーキャリア不可</strong>: 配送制限のあるASINを管理できます（オレンジ色で表示）
             </p>
             <p>
-              • <strong>危険物管理</strong>: ASINごとに危険物フラグを設定可能
+              • <strong>並び替え機能</strong>: 各列のヘッダーをクリックして昇順・降順で並び替え
             </p>
             <p>
-              • <strong>展開表示</strong>: ASIN一覧をクリックして詳細情報を確認
+              • <strong>検索・フィルター</strong>: 商品名やメモでの検索、価格範囲やASIN有無でのフィルタリング
             </p>
             <p>
-              • <strong>簡単削除</strong>: 不要なASINは個別に削除可能
+              • <strong>色分け表示</strong>: 危険物（赤）、パートナーキャリア不可（オレンジ）、両方（グラデーション）
             </p>
           </div>
         </div>
