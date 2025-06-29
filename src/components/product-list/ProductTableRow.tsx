@@ -2,6 +2,7 @@
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo } from "@/types/product";
+import { calcProfit, calcProfitMargin, calcROI } from "@/lib/calc";
 
 interface Props {
   product: Product;
@@ -25,9 +26,9 @@ export const ProductTableRow: React.FC<Props> = ({
   onHiddenChange,
 }) => {
   return (
-    <tr className="border-b transition hover:bg-white/10">
+    <tr className="border-b transition bg-background text-foreground hover:bg-accent/30">
       {/* 1. 画像 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 bg-background text-foreground">
         <Avatar className="w-20 h-20 rounded-none">
           {product.imageUrl ? (
             <AvatarImage
@@ -41,24 +42,30 @@ export const ProductTableRow: React.FC<Props> = ({
         </Avatar>
       </td>
       {/* 2. 商品名 */}
-      <td className="px-2 py-1 text-foreground">{product.name}</td>
+      <td className="px-2 py-1 bg-background text-foreground">{product.name}</td>
       {/* 3. 価格 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 bg-background text-foreground">
         {product.salePrice ? (
           <>
             <span className="line-through text-gray-400 mr-1">{product.price}円</span>
             <span className="text-red-400 font-bold">{product.salePrice}円</span>
           </>
         ) : (
-          <span className="text-foreground">{product.price}円</span>
+          <span>{product.price}円</span>
         )}
       </td>
       {/* 4. Amazon商品名 */}
-      <td className="px-2 py-1 text-foreground">
-        {isLoadingFee ? "取得中…" : feeInfo && feeInfo.productName ? feeInfo.productName : "-"}
+      <td className="px-2 py-1 bg-background text-foreground">
+        {asinInput.length !== 10
+          ? "-"
+          : isLoadingFee
+            ? "取得中…"
+            : feeInfo
+              ? feeInfo.productName
+              : "ASIN情報なし"}
       </td>
       {/* 5. ASIN */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 bg-background text-foreground">
         <input
           type="text"
           className="border px-1 py-0.5 rounded w-28 bg-white text-black"
@@ -75,76 +82,95 @@ export const ProductTableRow: React.FC<Props> = ({
         />
       </td>
       {/* 6. 月間販売個数 */}
-      <td className="px-2 py-1 text-foreground">
-        {isLoadingFee
-          ? "取得中…"
-          : feeInfo && feeInfo.soldUnit !== undefined
-            ? `${feeInfo.soldUnit}個`
-            : "-"}
+      <td className="px-2 py-1 bg-background text-foreground">
+        {asinInput.length === 10
+          ? isLoadingFee
+            ? "取得中…"
+            : feeInfo?.soldUnit !== undefined
+              ? `${feeInfo.soldUnit}`
+              : "-"
+          : "-"}
       </td>
       {/* 7. Amazon販売価格 */}
-      <td className="px-2 py-1 text-foreground">
-        {isLoadingFee
-          ? "取得中…"
-          : feeInfo && feeInfo.price !== undefined
-            ? `${feeInfo.price}円`
-            : "-"}
-      </td>
+      <td className="px-2 py-1 bg-background text-foreground">
+        {asinInput.length === 10
+          ? isLoadingFee
+            ? "取得中…"
+            : feeInfo?.price !== undefined
+              ? `${feeInfo.price}円`
+              : "-"
+          : "-"}
+      </td> 
       {/* 8. 販売手数料 */}
-      <td className="px-2 py-1 text-foreground">
-        {isLoadingFee
-          ? "取得中…"
-          : feeInfo && feeInfo.sellingFee !== undefined
-            ? `${feeInfo.sellingFee}円`
-            : "-"}
+      <td className="px-2 py-1 bg-background text-foreground">
+        {asinInput.length === 10
+          ? isLoadingFee
+            ? "取得中…"
+            : feeInfo?.sellingFee !== undefined
+              ? `${feeInfo.sellingFee}%`
+              : "-"
+          : "-"}
       </td>
       {/* 9. FBA手数料 */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
           : feeInfo && feeInfo.fbaFee !== undefined
-            ? `${feeInfo.fbaFee}円`
+            ? `${feeInfo.fbaFee}`
             : "-"}
       </td>
       {/* 10. 利益額 */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
           : feeInfo &&
               feeInfo.price !== undefined &&
               feeInfo.sellingFee !== undefined &&
               feeInfo.fbaFee !== undefined
-            ? `${feeInfo.price - feeInfo.sellingFee - feeInfo.fbaFee}円`
+            ? `${calcProfit(feeInfo.price,feeInfo.sellingFee,feeInfo.fbaFee,product.price)}`
             : "-"}
       </td>
       {/* 11. 利益率 */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
           : feeInfo &&
               feeInfo.price !== undefined &&
               feeInfo.sellingFee !== undefined &&
-              feeInfo.fbaFee !== undefined
+              feeInfo.fbaFee !== undefined &&
+              product.price !== undefined
             ? `${Math.round(
-                ((feeInfo.price - feeInfo.sellingFee - feeInfo.fbaFee) / feeInfo.price) * 100,
+                calcProfitMargin(
+                  feeInfo.price,
+                  feeInfo.sellingFee,
+                  feeInfo.fbaFee,
+                  product.price
+                )
               )}%`
             : "-"}
       </td>
+
       {/* 12. ROI */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
           : feeInfo &&
               feeInfo.price !== undefined &&
               feeInfo.sellingFee !== undefined &&
-              feeInfo.fbaFee !== undefined
+              feeInfo.fbaFee !== undefined &&
+              product.price !== undefined
             ? `${Math.round(
-                ((feeInfo.price - feeInfo.sellingFee - feeInfo.fbaFee) / feeInfo.price) * 100,
+                calcROI(
+                  feeInfo.price,
+                  feeInfo.sellingFee,
+                  feeInfo.fbaFee,
+                  product.price
+                )
               )}%`
             : "-"}
       </td>
       {/* 13. 非表示 */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         <input
           type="checkbox"
           checked={!!product.hidden}
@@ -152,7 +178,7 @@ export const ProductTableRow: React.FC<Props> = ({
         />
       </td>
       {/* 14. メモ */}
-      <td className="px-2 py-1 text-foreground">
+      <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee ? (
           "取得中…"
         ) : (

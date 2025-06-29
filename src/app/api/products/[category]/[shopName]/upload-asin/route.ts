@@ -1,4 +1,4 @@
-// src/app/api/products/[category]/[shopName]/upload-asin/route.ts
+// src/app/api/products/[category]/[shopName]/update-asin/route.ts
 
 import { NextResponse } from "next/server";
 import fs from "fs/promises";
@@ -30,6 +30,10 @@ export async function POST(
       );
     }
 
+    // asinsフィールドがなければ追加
+    if (!("asins" in shopData.products[index])) {
+      shopData.products[index].asins = "";
+    }
     // ASINを更新
     shopData.products[index].asin = asin;
 
