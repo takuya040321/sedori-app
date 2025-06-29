@@ -51,7 +51,7 @@ export const UserDiscountControl: React.FC<UserDiscountControlProps> = ({
             type="number"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="w-20 h-8 text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+            className="w-20 h-8 text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
             min="0"
             max="50"
             step="0.1"

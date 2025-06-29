@@ -2,7 +2,7 @@
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
-import { calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
+import { calculateProfitWithShopPricing, calculateActualCost } from "@/lib/pricing-calculator";
 
 interface Props {
   product: Product;
@@ -55,8 +55,13 @@ export const ProductTableRow: React.FC<Props> = ({
       return `${(product.salePrice || product.price).toLocaleString()}円`;
     }
 
-    const basePrice = product.salePrice || product.price;
-    const actualCost = profitResult?.actualCost || 0;
+    // 実際の仕入価格を計算
+    const actualCost = calculateActualCost(
+      product.price,
+      product.salePrice,
+      shopPricingConfig,
+      userDiscountSettings
+    );
 
     switch (shopPricingConfig.priceCalculationType) {
       case 'fixed_discount':
