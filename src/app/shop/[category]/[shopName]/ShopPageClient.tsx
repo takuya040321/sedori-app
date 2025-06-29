@@ -4,6 +4,7 @@
 import React, { useRef } from "react";
 import { ProductTable } from "@/components/product-list/ProductTable";
 import { ScrapingButton } from "@/components/product-list/ScrapingButton";
+import { ProxyStatusIndicator } from "@/components/product-list/ProxyStatusIndicator";
 
 interface ShopPageClientProps {
   category: string;
@@ -15,7 +16,8 @@ export default function ShopPageClient({ category, shopName, shopData }: ShopPag
   const tableRef = useRef<any>(null);
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* ヘッダー部分 */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gradient mb-2">{shopName} 商品一覧</h2>
@@ -26,16 +28,23 @@ export default function ShopPageClient({ category, shopName, shopData }: ShopPag
               : "データなし"}
           </p>
         </div>
-        <ScrapingButton
-          category={category}
-          shopName={shopName}
-          onScraped={() => {
-            if (tableRef.current && tableRef.current.mutate) {
-              tableRef.current.mutate();
-            }
-          }}
-        />
+        <div className="flex items-center gap-4">
+          <ScrapingButton
+            category={category}
+            shopName={shopName}
+            onScraped={() => {
+              if (tableRef.current && tableRef.current.mutate) {
+                tableRef.current.mutate();
+              }
+            }}
+          />
+        </div>
       </div>
+
+      {/* プロキシ状態表示 */}
+      <ProxyStatusIndicator />
+
+      {/* 商品テーブル */}
       <ProductTable
         ref={tableRef}
         category={category}
