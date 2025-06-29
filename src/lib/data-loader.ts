@@ -57,6 +57,9 @@ export async function saveShopData(
  */
 export async function getAllShops(): Promise<{ category: string; shops: string[] }[]> {
   try {
+    // データディレクトリが存在しない場合は作成
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    
     const categories = await fs.readdir(DATA_DIR);
     const result: { category: string; shops: string[] }[] = [];
 
