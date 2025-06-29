@@ -21,7 +21,7 @@
           "jan": [],
           "note": "手動入力が必要",
           "isDangerousGoods": true,
-          "isPartnerCarrierUnavailable": false
+          "isPartnerCarrierUnavailable": true
         }
       ]
     },
