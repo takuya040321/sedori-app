@@ -26,120 +26,231 @@ export async function scrapeDHC(): Promise<ShopData> {
   let allProducts: Product[] = [];
 
   try {
+    // ページ設定を追加
+    await page.setDefaultNavigationTimeout(60000);
+    await page.setDefaultTimeout(30000);
+
     for (const url of CATEGORY_URLS) {
       console.log(`\n==== Scraping category: ${url} ====`);
-      await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-      await wait(2000);
+      
+      try {
+        await page.goto(url, { 
+          waitUntil: "networkidle2", 
+          timeout: 60000 
+        });
+        await wait(3000); // 少し長めに待機
 
-      let pageNum = 1;
-      let hasNext = true;
-      while (hasNext) {
-        try {
-          await page.waitForSelector("#goods > li", { timeout: 10000 });
-        } catch (error) {
-          console.log(`⚠️ No products found on page ${pageNum}, moving to next category`);
-          break;
-        }
+        let pageNum = 1;
+        let hasNext = true;
+        let consecutiveEmptyPages = 0;
 
-        // 商品リスト取得
-        const products: Product[] = await page.evaluate(() => {
-          const items = Array.from(document.querySelectorAll("#goods > li"));
-          const now = new Date().toISOString();
-          return items.map((li) => {
-            const imgElem = li.querySelector(".img_box a img");
-            let imageUrl = imgElem?.getAttribute("data-src") || imgElem?.getAttribute("src") || "";
-            if (imageUrl && !imageUrl.startsWith("http")) {
-              imageUrl = "https://www.dhc.co.jp" + imageUrl;
-            }
-            if (imageUrl.includes("noimage")) {
-              imageUrl = "";
-            }
-            const name = li.querySelector(".name_box .name a")?.textContent?.trim() || "";
+        while (hasNext && consecutiveEmptyPages < 3) {
+          try {
+            // 商品リストの存在確認（より柔軟に）
+            const hasProducts = await page.evaluate(() => {
+              const goods = document.querySelector("#goods");
+              const items = goods ? goods.querySelectorAll("li") : [];
+              return items.length > 0;
+            });
 
-            const price1Text =
-              li.querySelector(".price_box .price1")?.textContent?.replace(/[,¥円\s]/g, "") || "";
-            const price2Text =
-              li.querySelector(".price_box .price2 strong")?.textContent?.replace(/[,¥円\s]/g, "") ||
-              "";
+            if (!hasProducts) {
+              console.log(`⚠️ No products container found on page ${pageNum}`);
+              consecutiveEmptyPages++;
+              
+              // 次ページボタンがあるかチェック
+              const hasNextButton = await page.evaluate(() => {
+                const nextBtn = document.querySelector(".page-link.next");
+                return !!nextBtn && 
+                       !nextBtn.hasAttribute("disabled") && 
+                       !nextBtn.classList.contains("disabled");
+              });
 
-            let price: number | undefined = undefined;
-            let salePrice: number | undefined = undefined;
-            if (price1Text) {
-              price = parseInt(price1Text, 10);
-              if (price2Text) {
-                salePrice = parseInt(price2Text, 10);
+              if (!hasNextButton) {
+                break;
               }
-            } else if (price2Text) {
-              price = parseInt(price2Text, 10);
+
+              // 次ページに進む
+              await page.evaluate(() => {
+                const btn = document.querySelector(".page-link.next") as HTMLElement;
+                if (btn) btn.click();
+              });
+              await wait(3000);
+              pageNum++;
+              continue;
             }
 
-            if (isNaN(price as number)) price = undefined;
-            if (isNaN(salePrice as number)) salePrice = undefined;
+            // 商品リスト取得
+            const products: Product[] = await page.evaluate(() => {
+              const items = Array.from(document.querySelectorAll("#goods > li"));
+              const now = new Date().toISOString();
+              
+              return items
+                .filter(li => {
+                  // 商品名があるかチェック
+                  const nameElem = li.querySelector(".name_box .name a");
+                  return nameElem && nameElem.textContent && nameElem.textContent.trim().length > 0;
+                })
+                .map((li) => {
+                  const imgElem = li.querySelector(".img_box a img");
+                  let imageUrl = imgElem?.getAttribute("data-src") || 
+                                imgElem?.getAttribute("src") || "";
+                  
+                  if (imageUrl && !imageUrl.startsWith("http")) {
+                    imageUrl = "https://www.dhc.co.jp" + imageUrl;
+                  }
+                  if (imageUrl.includes("noimage")) {
+                    imageUrl = "";
+                  }
 
-            return {
-              name,
-              imageUrl,
-              price,
-              salePrice,
-              asins: undefined,
-              updatedAt: now,
-            };
-          });
-        });
+                  const name = li.querySelector(".name_box .name a")?.textContent?.trim() || "";
 
-        if (products.length === 0) {
-          console.log(`No products in DOM on page ${pageNum}. Scraping finished for this category.`);
-          break;
-        }
+                  // 価格情報の取得を改善
+                  const priceBox = li.querySelector(".price_box");
+                  let price: number | undefined = undefined;
+                  let salePrice: number | undefined = undefined;
 
-        allProducts = allProducts.concat(products);
-        console.log(`📦 Page ${pageNum} scraped. Products so far: ${allProducts.length}`);
+                  if (priceBox) {
+                    const price1Elem = priceBox.querySelector(".price1");
+                    const price2Elem = priceBox.querySelector(".price2 strong");
+                    
+                    const price1Text = price1Elem?.textContent?.replace(/[,¥円\s]/g, "") || "";
+                    const price2Text = price2Elem?.textContent?.replace(/[,¥円\s]/g, "") || "";
 
-        // 「次へ」ボタンの有無を判定
-        hasNext = await page.evaluate(() => {
-          const nextBtn = document.querySelector(".page-link.next");
-          return (
-            !!nextBtn &&
-            !nextBtn.hasAttribute("disabled") &&
-            !nextBtn.classList.contains("disabled") &&
-            nextBtn.getAttribute("aria-disabled") !== "true"
-          );
-        });
+                    if (price1Text && price2Text) {
+                      // 両方ある場合：price1が通常価格、price2がセール価格
+                      price = parseInt(price1Text, 10);
+                      salePrice = parseInt(price2Text, 10);
+                    } else if (price2Text) {
+                      // price2のみの場合：通常価格
+                      price = parseInt(price2Text, 10);
+                    } else if (price1Text) {
+                      // price1のみの場合：通常価格
+                      price = parseInt(price1Text, 10);
+                    }
+                  }
 
-        if (!hasNext) break;
+                  // 価格が無効な場合はスキップ
+                  if (!price || isNaN(price) || price <= 0) {
+                    return null;
+                  }
 
-        // 1件目の商品名でページ遷移を検知
-        const firstProductName = await page.evaluate(() => {
-          const first = document.querySelector("#goods > li .name_box .name a");
-          return first?.textContent?.trim() || "";
-        });
+                  if (salePrice && (isNaN(salePrice) || salePrice <= 0)) {
+                    salePrice = undefined;
+                  }
 
-        // 「次へ」ボタンをクリック
-        await page.evaluate(() => {
-          const btn = document.querySelector(".page-link.next") as HTMLElement;
-          if (btn) btn.click();
-        });
+                  return {
+                    name,
+                    imageUrl,
+                    price,
+                    salePrice,
+                    asins: undefined,
+                    updatedAt: now,
+                  };
+                })
+                .filter(product => product !== null) as Product[];
+            });
 
-        // 商品リストの1件目が変わるまで待つ（最大10秒）
-        const maxWait = 10000;
-        const interval = 200;
-        let waited = 0;
-        while (waited < maxWait) {
-          await wait(interval);
-          const newFirstProductName = await page.evaluate(() => {
-            const first = document.querySelector("#goods > li .name_box .name a");
-            return first?.textContent?.trim() || "";
-          });
-          if (newFirstProductName && newFirstProductName !== firstProductName) {
-            break;
+            if (products.length === 0) {
+              console.log(`📭 No valid products found on page ${pageNum}`);
+              consecutiveEmptyPages++;
+            } else {
+              consecutiveEmptyPages = 0; // リセット
+              allProducts = allProducts.concat(products);
+              console.log(`📦 Page ${pageNum} scraped. Products: ${products.length}, Total: ${allProducts.length}`);
+            }
+
+            // 「次へ」ボタンの有無を判定
+            hasNext = await page.evaluate(() => {
+              const nextBtn = document.querySelector(".page-link.next");
+              return (
+                !!nextBtn &&
+                !nextBtn.hasAttribute("disabled") &&
+                !nextBtn.classList.contains("disabled") &&
+                nextBtn.getAttribute("aria-disabled") !== "true"
+              );
+            });
+
+            if (!hasNext) {
+              console.log(`🏁 No more pages available`);
+              break;
+            }
+
+            // ページ遷移前の商品名を記録
+            const firstProductName = await page.evaluate(() => {
+              const first = document.querySelector("#goods > li .name_box .name a");
+              return first?.textContent?.trim() || "";
+            });
+
+            // 「次へ」ボタンをクリック
+            await page.evaluate(() => {
+              const btn = document.querySelector(".page-link.next") as HTMLElement;
+              if (btn) btn.click();
+            });
+
+            // ページ遷移を待つ
+            let transitionWaited = 0;
+            const maxTransitionWait = 15000; // 15秒
+            const checkInterval = 500;
+
+            while (transitionWaited < maxTransitionWait) {
+              await wait(checkInterval);
+              transitionWaited += checkInterval;
+
+              const newFirstProductName = await page.evaluate(() => {
+                const first = document.querySelector("#goods > li .name_box .name a");
+                return first?.textContent?.trim() || "";
+              });
+
+              if (newFirstProductName && newFirstProductName !== firstProductName) {
+                console.log(`✅ Page transition detected`);
+                break;
+              }
+            }
+
+            await wait(2000); // 追加の安定化待機
+            pageNum++;
+
+          } catch (pageError) {
+            console.error(`❌ Error on page ${pageNum}:`, pageError);
+            consecutiveEmptyPages++;
+            
+            if (consecutiveEmptyPages >= 3) {
+              console.log(`🛑 Too many consecutive errors, moving to next category`);
+              break;
+            }
+            
+            // エラー時も次ページに進む試行
+            try {
+              const hasNextButton = await page.evaluate(() => {
+                const nextBtn = document.querySelector(".page-link.next");
+                return !!nextBtn && 
+                       !nextBtn.hasAttribute("disabled") && 
+                       !nextBtn.classList.contains("disabled");
+              });
+
+              if (hasNextButton) {
+                await page.evaluate(() => {
+                  const btn = document.querySelector(".page-link.next") as HTMLElement;
+                  if (btn) btn.click();
+                });
+                await wait(3000);
+                pageNum++;
+              } else {
+                break;
+              }
+            } catch (nextError) {
+              console.error(`❌ Failed to proceed to next page:`, nextError);
+              break;
+            }
           }
-          waited += interval;
         }
-        await wait(1000); // 念のため1秒待つ
 
-        pageNum++;
+      } catch (categoryError) {
+        console.error(`❌ Error scraping category ${url}:`, categoryError);
+        continue; // 次のカテゴリに進む
       }
     }
+
   } catch (error) {
     console.error(`❌ DHC scraping error:`, error);
     throw error;

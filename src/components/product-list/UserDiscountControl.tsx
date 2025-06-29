@@ -41,46 +41,48 @@ export const UserDiscountControl: React.FC<UserDiscountControlProps> = ({
   }
 
   return (
-    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-      <Settings className="w-4 h-4 text-gray-500" />
-      <span className="text-sm text-gray-600">追加割引:</span>
+    <div className="flex items-center gap-2 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+      <Settings className="w-4 h-4 text-blue-600" />
+      <span className="text-sm font-medium text-gray-700">追加割引:</span>
       
       {isEditing ? (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Input
             type="number"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="w-16 h-6 text-xs"
+            className="w-20 h-8 text-sm border-blue-300 focus:border-blue-500 focus:ring-blue-500"
             min="0"
             max="50"
             step="0.1"
           />
-          <span className="text-xs text-gray-500">%</span>
+          <span className="text-sm text-gray-600">%</span>
           <Button
             size="sm"
             onClick={handleSave}
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
           >
             保存
           </Button>
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={handleCancel}
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-xs border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             キャンセル
           </Button>
         </div>
       ) : (
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium">{currentDiscount}%</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            {currentDiscount}%
+          </span>
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={() => setIsEditing(true)}
-            className="h-6 px-2 text-xs"
+            className="h-8 px-3 text-xs border-blue-300 text-blue-600 hover:bg-blue-50"
           >
             編集
           </Button>

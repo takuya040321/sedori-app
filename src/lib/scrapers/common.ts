@@ -21,7 +21,7 @@ export const axiosWithProxy = axios.create({
     proxy: false,
   }),
   headers: {
-    "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
   },
   timeout: 30000, // 30秒タイムアウト
 });
@@ -43,6 +43,11 @@ export async function launchPuppeteerWithProxy(): Promise<{
       "--no-first-run",
       "--no-zygote",
       "--disable-gpu",
+      "--disable-web-security",
+      "--disable-features=VizDisplayCompositor",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding",
     ],
   };
 
@@ -71,6 +76,17 @@ export async function launchPuppeteerWithProxy(): Promise<{
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
   );
+
+  // リクエストインターセプト（画像やCSS等の不要なリソースをブロック）
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const resourceType = req.resourceType();
+    if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
 
   return { browser, page };
 }
