@@ -7,7 +7,23 @@
       "price": 2420,
       "salePrice": 1815,
       "updatedAt": "2025-06-29T04:44:10.081Z",
-      "memo": ""
+      "memo": "",
+      "asins": [
+        {
+          "asin": "B09WR43459",
+          "url": "https://amazon.co.jp/dp/B09WR43459",
+          "productName": "",
+          "brand": "vt-cosmetics",
+          "price": 0,
+          "soldUnit": 0,
+          "sellingFee": null,
+          "fbaFee": null,
+          "jan": [],
+          "note": "手動入力が必要",
+          "isDangerousGoods": false,
+          "isPartnerCarrierUnavailable": false
+        }
+      ]
     },
     {
       "name": "CICA クリーム",
