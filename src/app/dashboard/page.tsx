@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const lastUpdated =
     allProducts.length > 0
       ? new Date(Math.max(...allProducts.map((p) => new Date(p.updatedAt).getTime())))
-      : new Date();
+      : null;
 
   return (
     <div className="min-h-screen">
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
           />
           <KPICard
             title="最終更新"
-            value={lastUpdated.toLocaleDateString("ja-JP")}
+            value={lastUpdated ? lastUpdated.toLocaleDateString("ja-JP") : "データなし"}
             icon={<Clock className="w-6 h-6" />}
             gradient="gradient-accent"
             delay={0.2}
