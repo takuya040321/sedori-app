@@ -6,7 +6,7 @@ export interface Product {
   salePrice?: number;
   asins?: AsinInfo[];
   updatedAt: string;
-  hidden?: boolean; // ← これを追加
+  hidden?: boolean;
 }
 
 export interface AsinInfo {
@@ -55,3 +55,18 @@ export type AsinInfoHeaderKey =
   | "sellingFeeRaw"
   | "fbaFeeRaw"
   | "janRaw";
+
+// ショップ別価格計算設定
+export interface ShopPricingConfig {
+  shopName: string;
+  category: string;
+  priceCalculationType: 'fixed_discount' | 'percentage_discount' | 'user_configurable';
+  fixedDiscount?: number; // 固定割引額（円）
+  percentageDiscount?: number; // 固定割引率（%）
+  allowUserDiscount?: boolean; // ユーザー設定割引の許可
+}
+
+// ユーザー設定割引情報
+export interface UserDiscountSettings {
+  [shopKey: string]: number; // ショップキー: 割引率（%）
+}

@@ -14,6 +14,9 @@ export const ProductTableHeader: React.FC = () => (
         価格
       </th>
       <th className="sticky top-0 z-10 px-2 py-1 border-b gradient-primary text-white font-semibold">
+        実際の仕入れ価格
+      </th>
+      <th className="sticky top-0 z-10 px-2 py-1 border-b gradient-primary text-white font-semibold">
         Amazon商品名
       </th>
       <th className="sticky top-0 z-10 px-2 py-1 border-b gradient-primary text-white font-semibold">

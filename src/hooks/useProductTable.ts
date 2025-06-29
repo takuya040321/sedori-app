@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Product, AsinInfo } from "@/types/product";
+import { fetchASINInfo } from "@/lib/fetchASINInfo";
 
 export function useProductTable(category: string, shopName: string, initialProducts: Product[]) {
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -14,41 +15,10 @@ export function useProductTable(category: string, shopName: string, initialProdu
   const [asinInputs, setAsinInputs] = useState<string[]>([]);
   const [loadingIndexes, setLoadingIndexes] = useState<number[]>([]);
 
-  // 商品データ取得時、asins[0]?.asinがあれば詳細データも取得
   useEffect(() => {
-    setAsinInputs(
-      products.map((p) =>
-        Array.isArray(p.asins) && typeof p.asins[0]?.asin === "string" ? p.asins[0].asin : "",
-      ),
-    );
+    setAsinInputs(products.map((p) => (p.asins && p.asins[0]?.asin) || ""));
     setFeeInfos(Array(products.length).fill(undefined));
-
-    // asinがある商品の詳細データを一括取得
-    async function fetchAllAsinInfos() {
-      const infos: (AsinInfo | undefined)[] = await Promise.all(
-        products.map(async (p) => {
-          const asin =
-            Array.isArray(p.asins) && typeof p.asins[0]?.asin === "string" ? p.asins[0].asin : "";
-          if (asin && asin.length === 10) {
-            try {
-              const res = await fetch(`/api/asin-info?brand=${shopName}&asin=${asin}`);
-              if (res.ok) {
-                return await res.json();
-              }
-            } catch (e) {
-              // エラー時はundefined
-            }
-          }
-          return undefined;
-        }),
-      );
-      setFeeInfos(infos);
-    }
-
-    if (products.length > 0) {
-      fetchAllAsinInfos();
-    }
-  }, [products, shopName]);
+  }, [products]);
 
   const handleAsinChange = (_rowIndex: number, value: string) => {
     const upper = value.toUpperCase();
@@ -61,24 +31,33 @@ export function useProductTable(category: string, shopName: string, initialProdu
   const handleAsinBlur = async (_rowIndex: number) => {
     const asin = asinInputs[_rowIndex];
     if (asin.length === 10) {
-      await fetch(`/api/products/${category}/${shopName}/update-asin`, {
+      await fetch(`/api/products/${category}/${shopName}/upload-asin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ index: _rowIndex, asin }),
       });
       setLoadingIndexes((prev) => [...prev, _rowIndex]);
-      // サーバーAPI経由でASIN情報を取得
-      const res = await fetch(`/api/asin-info?brand=${shopName}&asin=${asin}`);
-      let keepaInfo: AsinInfo | undefined = undefined;
-      if (res.ok) {
-        keepaInfo = await res.json();
+      
+      // ブランド名をショップ名から推定（実際の実装では適切なブランドマッピングが必要）
+      const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
+      
+      try {
+        const keepaInfo = await fetchASINInfo(asin, brand);
+        setFeeInfos((prev) => {
+          const next = [...prev];
+          next[_rowIndex] = keepaInfo;
+          return next;
+        });
+      } catch (error) {
+        console.error("Failed to fetch ASIN info:", error);
+        setFeeInfos((prev) => {
+          const next = [...prev];
+          next[_rowIndex] = undefined;
+          return next;
+        });
+      } finally {
+        setLoadingIndexes((prev) => prev.filter((i) => i !== _rowIndex));
       }
-      setFeeInfos((prev) => {
-        const next = [...prev];
-        next[_rowIndex] = keepaInfo;
-        return next;
-      });
-      setLoadingIndexes((prev) => prev.filter((i) => i !== _rowIndex));
     }
   };
 

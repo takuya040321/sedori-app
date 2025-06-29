@@ -1,8 +1,8 @@
 // src/components/product-list/ProductTableRow.tsx
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Product, AsinInfo } from "@/types/product";
-import { calcProfit, calcProfitMargin, calcROI } from "@/lib/calc";
+import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
+import { calculateProfitWithShopPricing, getDiscountDisplayText } from "@/lib/pricing-calculator";
 
 interface Props {
   product: Product;
@@ -13,6 +13,8 @@ interface Props {
   onAsinChange: (_rowIndex: number, _value: string) => void;
   onAsinBlur: (_rowIndex: number) => void;
   onHiddenChange: (_rowIndex: number, _checked: boolean) => void;
+  shopPricingConfig?: ShopPricingConfig;
+  userDiscountSettings?: UserDiscountSettings;
 }
 
 export const ProductTableRow: React.FC<Props> = ({
@@ -24,7 +26,41 @@ export const ProductTableRow: React.FC<Props> = ({
   onAsinChange,
   onAsinBlur,
   onHiddenChange,
+  shopPricingConfig,
+  userDiscountSettings = {},
 }) => {
+  // 利益計算（ショップ別価格設定を考慮）
+  const profitResult = React.useMemo(() => {
+    if (!feeInfo || !shopPricingConfig || 
+        feeInfo.price === undefined || 
+        feeInfo.sellingFee === null || 
+        feeInfo.fbaFee === null) {
+      return null;
+    }
+
+    return calculateProfitWithShopPricing(
+      product.price,
+      product.salePrice,
+      feeInfo.price,
+      feeInfo.sellingFee,
+      feeInfo.fbaFee,
+      shopPricingConfig,
+      userDiscountSettings
+    );
+  }, [product.price, product.salePrice, feeInfo, shopPricingConfig, userDiscountSettings]);
+
+  // 割引表示テキスト
+  const discountDisplayText = React.useMemo(() => {
+    if (!shopPricingConfig) return null;
+    
+    return getDiscountDisplayText(
+      product.price,
+      product.salePrice,
+      shopPricingConfig,
+      userDiscountSettings
+    );
+  }, [product.price, product.salePrice, shopPricingConfig, userDiscountSettings]);
+
   return (
     <tr className="border-b transition bg-background text-foreground hover:bg-accent/30">
       {/* 1. 画像 */}
@@ -41,20 +77,39 @@ export const ProductTableRow: React.FC<Props> = ({
           )}
         </Avatar>
       </td>
+      
       {/* 2. 商品名 */}
       <td className="px-2 py-1 bg-background text-foreground">{product.name}</td>
+      
       {/* 3. 価格 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {product.salePrice ? (
           <>
-            <span className="line-through text-gray-400 mr-1">{product.price}円</span>
-            <span className="text-red-400 font-bold">{product.salePrice}円</span>
+            <span className="line-through text-gray-400 mr-1">{product.price.toLocaleString()}円</span>
+            <span className="text-red-400 font-bold">{product.salePrice.toLocaleString()}円</span>
           </>
         ) : (
-          <span>{product.price}円</span>
+          <span>{product.price.toLocaleString()}円</span>
         )}
       </td>
-      {/* 4. Amazon商品名 */}
+      
+      {/* 4. 実際の仕入れ価格 */}
+      <td className="px-2 py-1 bg-background text-foreground">
+        {shopPricingConfig ? (
+          <div className="space-y-1">
+            <div className="font-medium text-blue-600">
+              {profitResult ? `${profitResult.actualCost.toLocaleString()}円` : discountDisplayText?.split('=')[1]?.trim() || '-'}
+            </div>
+            <div className="text-xs text-gray-500">
+              {discountDisplayText}
+            </div>
+          </div>
+        ) : (
+          <span>{(product.salePrice || product.price).toLocaleString()}円</span>
+        )}
+      </td>
+      
+      {/* 5. Amazon商品名 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {asinInput.length !== 10
           ? "-"
@@ -64,7 +119,8 @@ export const ProductTableRow: React.FC<Props> = ({
               ? feeInfo.productName
               : "ASIN情報なし"}
       </td>
-      {/* 5. ASIN */}
+      
+      {/* 6. ASIN */}
       <td className="px-2 py-1 bg-background text-foreground">
         <input
           type="text"
@@ -81,27 +137,30 @@ export const ProductTableRow: React.FC<Props> = ({
           title="ASINは大文字半角英数字10桁で入力してください"
         />
       </td>
-      {/* 6. 月間販売個数 */}
+      
+      {/* 7. 月間販売個数 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {asinInput.length === 10
           ? isLoadingFee
             ? "取得中…"
             : feeInfo?.soldUnit !== undefined
-              ? `${feeInfo.soldUnit}`
+              ? `${feeInfo.soldUnit.toLocaleString()}`
               : "-"
           : "-"}
       </td>
-      {/* 7. Amazon販売価格 */}
+      
+      {/* 8. Amazon販売価格 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {asinInput.length === 10
           ? isLoadingFee
             ? "取得中…"
             : feeInfo?.price !== undefined
-              ? `${feeInfo.price}円`
+              ? `${feeInfo.price.toLocaleString()}円`
               : "-"
           : "-"}
-      </td> 
-      {/* 8. 販売手数料 */}
+      </td>
+      
+      {/* 9. 販売手数料 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {asinInput.length === 10
           ? isLoadingFee
@@ -111,65 +170,56 @@ export const ProductTableRow: React.FC<Props> = ({
               : "-"
           : "-"}
       </td>
-      {/* 9. FBA手数料 */}
+      
+      {/* 10. FBA手数料 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
           : feeInfo && feeInfo.fbaFee !== undefined
-            ? `${feeInfo.fbaFee}`
+            ? `${feeInfo.fbaFee.toLocaleString()}円`
             : "-"}
       </td>
-      {/* 10. 利益額 */}
+      
+      {/* 11. 利益額 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
-          : feeInfo &&
-              feeInfo.price !== undefined &&
-              feeInfo.sellingFee !== undefined &&
-              feeInfo.fbaFee !== undefined
-            ? `${calcProfit(feeInfo.price,feeInfo.sellingFee,feeInfo.fbaFee,product.price)}`
+          : profitResult
+            ? (
+              <span className={profitResult.profit >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                {profitResult.profit.toLocaleString()}円
+              </span>
+            )
             : "-"}
       </td>
-      {/* 11. 利益率 */}
+      
+      {/* 12. 利益率 */}
       <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
-          : feeInfo &&
-              feeInfo.price !== undefined &&
-              feeInfo.sellingFee !== undefined &&
-              feeInfo.fbaFee !== undefined &&
-              product.price !== undefined
-            ? `${Math.round(
-                calcProfitMargin(
-                  feeInfo.price,
-                  feeInfo.sellingFee,
-                  feeInfo.fbaFee,
-                  product.price
-                )
-              )}%`
+          : profitResult
+            ? (
+              <span className={profitResult.profitMargin >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                {Math.round(profitResult.profitMargin)}%
+              </span>
+            )
             : "-"}
       </td>
 
-      {/* 12. ROI */}
+      {/* 13. ROI */}
       <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee
           ? "取得中…"
-          : feeInfo &&
-              feeInfo.price !== undefined &&
-              feeInfo.sellingFee !== undefined &&
-              feeInfo.fbaFee !== undefined &&
-              product.price !== undefined
-            ? `${Math.round(
-                calcROI(
-                  feeInfo.price,
-                  feeInfo.sellingFee,
-                  feeInfo.fbaFee,
-                  product.price
-                )
-              )}%`
+          : profitResult
+            ? (
+              <span className={profitResult.roi >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                {Math.round(profitResult.roi)}%
+              </span>
+            )
             : "-"}
       </td>
-      {/* 13. 非表示 */}
+      
+      {/* 14. 非表示 */}
       <td className="px-2 py-1 bg-background text-foreground">
         <input
           type="checkbox"
@@ -177,7 +227,8 @@ export const ProductTableRow: React.FC<Props> = ({
           onChange={(e) => onHiddenChange(_rowIndex, e.target.checked)}
         />
       </td>
-      {/* 14. メモ */}
+      
+      {/* 15. メモ */}
       <td className="px-2 py-1 bg-background text-foreground">
         {isLoadingFee ? (
           "取得中…"
