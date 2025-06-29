@@ -69,6 +69,47 @@ export function useProductTable(category: string, shopName: string, initialProdu
     }).then(() => mutate());
   };
 
+  // メモ更新処理
+  const handleMemoChange = async (_rowIndex: number, memo: string) => {
+    try {
+      await fetch(`/api/products/${category}/${shopName}/update-memo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: _rowIndex, memo }),
+      });
+      // 成功時はmutateを呼ばない（リアルタイム更新のため）
+    } catch (error) {
+      console.error("Failed to update memo:", error);
+    }
+  };
+
+  // 危険物フラグ更新処理
+  const handleDangerousGoodsChange = async (_rowIndex: number, isDangerousGoods: boolean) => {
+    try {
+      // ASIN情報を更新
+      const asin = asinInputs[_rowIndex];
+      if (asin.length === 10) {
+        const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
+        await fetch(`/api/asin-dangerous-goods`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ asin, brand, isDangerousGoods }),
+        });
+
+        // ローカル状態も更新
+        setFeeInfos((prev) => {
+          const next = [...prev];
+          if (next[_rowIndex]) {
+            next[_rowIndex] = { ...next[_rowIndex]!, isDangerousGoods };
+          }
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update dangerous goods flag:", error);
+    }
+  };
+
   return {
     products,
     isLoading,
@@ -79,5 +120,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
     handleAsinChange,
     handleAsinBlur,
     handleHiddenChange,
+    handleMemoChange,
+    handleDangerousGoodsChange,
   };
 }

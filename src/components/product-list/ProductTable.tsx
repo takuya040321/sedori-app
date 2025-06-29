@@ -30,6 +30,8 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
       handleAsinChange,
       handleAsinBlur,
       handleHiddenChange,
+      handleMemoChange,
+      handleDangerousGoodsChange,
       mutate,
     } = useProductTable(category, shopName, initialProducts);
 
@@ -100,6 +102,8 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                     onAsinChange={handleAsinChange}
                     onAsinBlur={handleAsinBlur}
                     onHiddenChange={handleHiddenChange}
+                    onMemoChange={handleMemoChange}
+                    onDangerousGoodsChange={handleDangerousGoodsChange}
                     shopPricingConfig={shopPricingConfig}
                     userDiscountSettings={userDiscountSettings}
                   />
@@ -137,6 +141,24 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             </div>
           </div>
         )}
+
+        {/* 機能説明 */}
+        <div className="minimal-card p-6 bg-amber-50 border-amber-200">
+          <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+            ⚠️ 危険物・メモ機能について
+          </h4>
+          <div className="text-sm text-amber-800 space-y-2">
+            <p>
+              • <strong>危険物チェック</strong>: FBA納品不可の商品にチェックを入れると、その行がグレーアウトされます
+            </p>
+            <p>
+              • <strong>メモ機能</strong>: 各商品に個別のメモを入力できます（1秒後に自動保存）
+            </p>
+            <p>
+              • <strong>視覚的表示</strong>: 危険物にチェックが入った商品は画像に警告アイコンが表示されます
+            </p>
+          </div>
+        </div>
       </div>
     );
   },

@@ -17,8 +17,9 @@ export const ProductTableHeader: React.FC = () => (
       <th className="w-20">利益額</th>
       <th className="w-16">利益率</th>
       <th className="w-16">ROI</th>
+      <th className="w-16">危険物</th>
       <th className="w-16">非表示</th>
-      <th className="w-20">メモ</th>
+      <th className="w-32">メモ</th>
     </tr>
   </thead>
 );

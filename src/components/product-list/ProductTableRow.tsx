@@ -1,8 +1,9 @@
 // src/components/product-list/ProductTableRow.tsx
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateProfitWithShopPricing, calculateActualCost } from "@/lib/pricing-calculator";
+import { AlertTriangle, Package } from "lucide-react";
 
 interface Props {
   product: Product;
@@ -13,6 +14,8 @@ interface Props {
   onAsinChange: (_rowIndex: number, _value: string) => void;
   onAsinBlur: (_rowIndex: number) => void;
   onHiddenChange: (_rowIndex: number, _checked: boolean) => void;
+  onMemoChange: (_rowIndex: number, _memo: string) => void;
+  onDangerousGoodsChange: (_rowIndex: number, _checked: boolean) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
 }
@@ -26,9 +29,41 @@ export const ProductTableRow: React.FC<Props> = ({
   onAsinChange,
   onAsinBlur,
   onHiddenChange,
+  onMemoChange,
+  onDangerousGoodsChange,
   shopPricingConfig,
   userDiscountSettings = {},
 }) => {
+  const [memoValue, setMemoValue] = useState(product.memo || "");
+  const [isDangerousGoods, setIsDangerousGoods] = useState(feeInfo?.isDangerousGoods || false);
+  const memoTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // feeInfoが更新されたときにisDangerousGoodsを同期
+  useEffect(() => {
+    setIsDangerousGoods(feeInfo?.isDangerousGoods || false);
+  }, [feeInfo?.isDangerousGoods]);
+
+  // メモの変更をデバウンス処理
+  const handleMemoChange = (value: string) => {
+    setMemoValue(value);
+    
+    // 既存のタイマーをクリア
+    if (memoTimeoutRef.current) {
+      clearTimeout(memoTimeoutRef.current);
+    }
+    
+    // 1秒後に保存
+    memoTimeoutRef.current = setTimeout(() => {
+      onMemoChange(_rowIndex, value);
+    }, 1000);
+  };
+
+  // 危険物チェックボックスの変更
+  const handleDangerousGoodsChange = (checked: boolean) => {
+    setIsDangerousGoods(checked);
+    onDangerousGoodsChange(_rowIndex, checked);
+  };
+
   // 利益計算（ショップ別価格設定を考慮）
   const profitResult = React.useMemo(() => {
     if (!feeInfo || !shopPricingConfig || 
@@ -114,32 +149,46 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
+  // 行のスタイル（危険物の場合はグレーアウト）
+  const rowClassName = `border-b transition ${
+    isDangerousGoods 
+      ? "bg-gray-100 text-gray-500 opacity-60" 
+      : "bg-background text-foreground hover:bg-accent/30"
+  }`;
+
   return (
-    <tr className="border-b transition bg-background text-foreground hover:bg-accent/30">
+    <tr className={rowClassName}>
       {/* 1. 画像 */}
-      <td className="px-2 py-1 bg-background text-foreground">
-        <Avatar className="w-16 h-16 rounded-none">
-          {product.imageUrl ? (
-            <AvatarImage
-              src={product.imageUrl}
-              alt={product.name}
-              className="object-contain border border-white/20 bg-black/10 rounded-none"
-            />
-          ) : (
-            <AvatarFallback className="text-[10px]">No</AvatarFallback>
+      <td className="px-2 py-1">
+        <div className="relative">
+          <Avatar className="w-16 h-16 rounded-none">
+            {product.imageUrl ? (
+              <AvatarImage
+                src={product.imageUrl}
+                alt={product.name}
+                className="object-contain border border-white/20 bg-black/10 rounded-none"
+              />
+            ) : (
+              <AvatarFallback className="text-[10px]">No</AvatarFallback>
+            )}
+          </Avatar>
+          {isDangerousGoods && (
+            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+              <AlertTriangle className="w-3 h-3 text-white" />
+            </div>
           )}
-        </Avatar>
+        </div>
       </td>
       
       {/* 2. 商品名 */}
-      <td className="px-2 py-1 bg-background text-foreground">
+      <td className="px-2 py-1">
         <div className="max-w-[200px] truncate" title={product.name}>
           {product.name}
         </div>
       </td>
       
       {/* 3. 価格 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         {product.salePrice ? (
           <div>
             <div className="line-through text-gray-400 text-xs">
@@ -155,12 +204,12 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 4. 仕入価格 */}
-      <td className="px-2 py-1 bg-background text-foreground">
+      <td className="px-2 py-1">
         {getPurchasePriceDisplay()}
       </td>
       
       {/* 5. Amazon商品名 */}
-      <td className="px-2 py-1 bg-background text-foreground">
+      <td className="px-2 py-1">
         <div className="max-w-[150px] truncate text-sm" title={feeInfo?.productName || ""}>
           {asinInput.length !== 10
             ? "-"
@@ -173,7 +222,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 6. ASIN */}
-      <td className="px-2 py-1 bg-background text-foreground">
+      <td className="px-2 py-1">
         <input
           type="text"
           className="border px-1 py-0.5 rounded w-20 bg-white text-black text-xs"
@@ -191,7 +240,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 7. 月間販売個数 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {asinInput.length === 10
             ? isLoadingFee
@@ -204,7 +253,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 8. Amazon販売価格 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {asinInput.length === 10
             ? isLoadingFee
@@ -217,7 +266,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 9. 販売手数料 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {asinInput.length === 10
             ? isLoadingFee
@@ -230,7 +279,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 10. FBA手数料 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {isLoadingFee
             ? "取得中"
@@ -241,7 +290,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 11. 利益額 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {isLoadingFee
             ? "取得中"
@@ -256,7 +305,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 12. 利益率 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {isLoadingFee
             ? "取得中"
@@ -271,7 +320,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
 
       {/* 13. ROI */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      <td className="px-2 py-1 text-center">
         <div className="text-sm">
           {isLoadingFee
             ? "取得中"
@@ -285,8 +334,24 @@ export const ProductTableRow: React.FC<Props> = ({
         </div>
       </td>
       
-      {/* 14. 非表示 */}
-      <td className="px-2 py-1 bg-background text-foreground text-center">
+      {/* 14. 危険物チェックボックス */}
+      <td className="px-2 py-1 text-center">
+        <div className="flex items-center justify-center">
+          <input
+            type="checkbox"
+            checked={isDangerousGoods}
+            onChange={(e) => handleDangerousGoodsChange(e.target.checked)}
+            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+            title="FBA納品不可（危険物）"
+          />
+          {isDangerousGoods && (
+            <AlertTriangle className="w-3 h-3 text-red-500 ml-1" />
+          )}
+        </div>
+      </td>
+      
+      {/* 15. 非表示 */}
+      <td className="px-2 py-1 text-center">
         <input
           type="checkbox"
           checked={!!product.hidden}
@@ -295,15 +360,16 @@ export const ProductTableRow: React.FC<Props> = ({
         />
       </td>
       
-      {/* 15. メモ */}
-      <td className="px-2 py-1 bg-background text-foreground">
-        <div className="text-xs max-w-[80px] truncate" title={feeInfo?.note || ""}>
-          {isLoadingFee ? (
-            "取得中"
-          ) : (
-            feeInfo?.note || "-"
-          )}
-        </div>
+      {/* 16. メモ */}
+      <td className="px-2 py-1">
+        <input
+          type="text"
+          className="border px-1 py-0.5 rounded w-28 bg-white text-black text-xs"
+          value={memoValue}
+          onChange={(e) => handleMemoChange(e.target.value)}
+          placeholder="メモ"
+          title="商品メモ（自動保存）"
+        />
       </td>
     </tr>
   );

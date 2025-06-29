@@ -7,6 +7,7 @@ export interface Product {
   asins?: AsinInfo[];
   updatedAt: string;
   hidden?: boolean;
+  memo?: string; // ユーザーメモ追加
 }
 
 export interface AsinInfo {
@@ -20,6 +21,7 @@ export interface AsinInfo {
   fbaFee: number | null;
   jan: string[];
   note?: string;
+  isDangerousGoods?: boolean; // FBA納品不可（危険物）フラグ追加
 }
 
 export interface ShopData {
@@ -51,7 +53,7 @@ export interface ActivityItem {
 }
 
 export type AsinInfoHeaderKey =
-  | keyof Omit<AsinInfo, "jan" | "note" | "sellingFee" | "fbaFee">
+  | keyof Omit<AsinInfo, "jan" | "note" | "sellingFee" | "fbaFee" | "isDangerousGoods">
   | "sellingFeeRaw"
   | "fbaFeeRaw"
   | "janRaw";
