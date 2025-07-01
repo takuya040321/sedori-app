@@ -56,6 +56,9 @@ export const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({
         </SortableHeader>
         <ResizableHeader className="w-32">仕入価格</ResizableHeader>
         <ResizableHeader className="w-32">ASIN管理</ResizableHeader>
+        <ResizableHeader className="w-24">利益額</ResizableHeader>
+        <ResizableHeader className="w-24">利益率</ResizableHeader>
+        <ResizableHeader className="w-24">ROI</ResizableHeader>
         <ResizableHeader className="w-16">危険物</ResizableHeader>
         <ResizableHeader className="w-16">ﾊﾟｰｷｬﾘ</ResizableHeader>
         <ResizableHeader className="w-16">非表示</ResizableHeader>

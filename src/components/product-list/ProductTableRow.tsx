@@ -2,9 +2,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
-import { calculateActualCost } from "@/lib/pricing-calculator";
-import { AlertTriangle, Truck } from "lucide-react";
+import { calculateActualCost, calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
+import { AlertTriangle, Truck, ChevronDown, ChevronUp } from "lucide-react";
 import { MultipleAsinManager } from "./MultipleAsinManager";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   product: Product;
@@ -34,6 +35,7 @@ export const ProductTableRow: React.FC<Props> = ({
   isLoadingAsins = false,
 }) => {
   const [memoValue, setMemoValue] = useState(product.memo || "");
+  const [isExpanded, setIsExpanded] = useState(false);
   const memoTimeoutRef = useRef<NodeJS.Timeout>();
 
   // メモの変更をデバウンス処理
@@ -116,6 +118,45 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
+  // 最適なASINの利益情報を計算（最も利益率の高いASIN）
+  const getBestProfitInfo = () => {
+    if (!product.asins || product.asins.length === 0 || !shopPricingConfig) {
+      return { profit: null, profitMargin: null, roi: null };
+    }
+
+    let bestProfit = null;
+    let bestProfitMargin = -Infinity;
+    let bestROI = null;
+
+    for (const asin of product.asins) {
+      if (asin.price > 0 && asin.sellingFee !== null && asin.fbaFee !== null) {
+        const profitResult = calculateProfitWithShopPricing(
+          product.price,
+          product.salePrice,
+          asin.price,
+          asin.sellingFee,
+          asin.fbaFee,
+          shopPricingConfig,
+          userDiscountSettings
+        );
+
+        if (profitResult.profitMargin > bestProfitMargin) {
+          bestProfitMargin = profitResult.profitMargin;
+          bestProfit = profitResult.profit;
+          bestROI = profitResult.roi;
+        }
+      }
+    }
+
+    return {
+      profit: bestProfit,
+      profitMargin: bestProfitMargin === -Infinity ? null : bestProfitMargin,
+      roi: bestROI,
+    };
+  };
+
+  const bestProfitInfo = getBestProfitInfo();
+
   // 危険物があるかチェック
   const hasDangerousGoods = product.asins?.some(asin => asin.isDangerousGoods) || false;
   
@@ -135,124 +176,314 @@ export const ProductTableRow: React.FC<Props> = ({
   }
 
   return (
-    <tr className={rowClassName}>
-      {/* 1. 画像 */}
-      <td className="px-2 py-1">
-        <div className="relative">
-          <Avatar className="w-16 h-16 rounded-none">
-            {product.imageUrl ? (
-              <AvatarImage
-                src={product.imageUrl}
-                alt={product.name}
-                className="object-contain border border-white/20 bg-black/10 rounded-none"
-              />
+    <>
+      <tr className={rowClassName}>
+        {/* 1. 画像 */}
+        <td className="px-2 py-1">
+          <div className="relative">
+            <Avatar className="w-16 h-16 rounded-none">
+              {product.imageUrl ? (
+                <AvatarImage
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="object-contain border border-white/20 bg-black/10 rounded-none"
+                />
+              ) : (
+                <AvatarFallback className="text-[10px]">No</AvatarFallback>
+              )}
+            </Avatar>
+            <div className="absolute -top-1 -right-1 flex gap-1">
+              {hasDangerousGoods && (
+                <div className="bg-red-500 rounded-full p-1">
+                  <AlertTriangle className="w-3 h-3 text-white" />
+                </div>
+              )}
+              {hasPartnerCarrierUnavailable && (
+                <div className="bg-orange-500 rounded-full p-1">
+                  <Truck className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </div>
+          </div>
+        </td>
+        
+        {/* 2. 商品名 */}
+        <td className="px-2 py-1">
+          <div className="max-w-[200px] truncate" title={product.name}>
+            {product.name}
+          </div>
+        </td>
+        
+        {/* 3. 価格 */}
+        <td className="px-2 py-1 text-center">
+          {product.salePrice ? (
+            <div>
+              <div className="line-through text-gray-400 text-xs">
+                {product.price.toLocaleString()}
+              </div>
+              <div className="text-red-400 font-bold text-sm">
+                {product.salePrice.toLocaleString()}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm">{product.price.toLocaleString()}</div>
+          )}
+        </td>
+        
+        {/* 4. 仕入価格 */}
+        <td className="px-2 py-1">
+          {getPurchasePriceDisplay()}
+        </td>
+        
+        {/* 5. ASIN管理 */}
+        <td className="px-2 py-1">
+          <div className="flex items-center gap-2">
+            <MultipleAsinManager
+              productIndex={_rowIndex}
+              productPrice={product.price}
+              productSalePrice={product.salePrice}
+              asins={product.asins || []}
+              onAsinAdd={onAsinAdd}
+              onAsinRemove={onAsinRemove}
+              onDangerousGoodsChange={onDangerousGoodsChange}
+              onPartnerCarrierChange={onPartnerCarrierChange}
+              shopPricingConfig={shopPricingConfig}
+              userDiscountSettings={userDiscountSettings}
+              isLoading={isLoadingAsins}
+            />
+            {product.asins && product.asins.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-6 w-6 p-0"
+              >
+                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </Button>
+            )}
+          </div>
+        </td>
+        
+        {/* 6. 利益額 */}
+        <td className="px-2 py-1 text-center">
+          {bestProfitInfo.profit !== null ? (
+            <div className={`font-medium text-sm ${
+              bestProfitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {bestProfitInfo.profit.toLocaleString()}円
+            </div>
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
+          )}
+        </td>
+        
+        {/* 7. 利益率 */}
+        <td className="px-2 py-1 text-center">
+          {bestProfitInfo.profitMargin !== null ? (
+            <div className={`font-medium text-sm ${
+              bestProfitInfo.profitMargin >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {Math.round(bestProfitInfo.profitMargin)}%
+            </div>
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
+          )}
+        </td>
+        
+        {/* 8. ROI */}
+        <td className="px-2 py-1 text-center">
+          {bestProfitInfo.roi !== null ? (
+            <div className={`font-medium text-sm ${
+              bestProfitInfo.roi >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {Math.round(bestProfitInfo.roi)}%
+            </div>
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
+          )}
+        </td>
+        
+        {/* 9. 危険物 */}
+        <td className="px-2 py-1 text-center">
+          <div className="flex items-center justify-center">
+            {hasDangerousGoods ? (
+              <AlertTriangle className="w-4 h-4 text-red-500" />
             ) : (
-              <AvatarFallback className="text-[10px]">No</AvatarFallback>
-            )}
-          </Avatar>
-          <div className="absolute -top-1 -right-1 flex gap-1">
-            {hasDangerousGoods && (
-              <div className="bg-red-500 rounded-full p-1">
-                <AlertTriangle className="w-3 h-3 text-white" />
-              </div>
-            )}
-            {hasPartnerCarrierUnavailable && (
-              <div className="bg-orange-500 rounded-full p-1">
-                <Truck className="w-3 h-3 text-white" />
-              </div>
+              <span className="text-gray-400 text-xs">-</span>
             )}
           </div>
-        </div>
-      </td>
-      
-      {/* 2. 商品名 */}
-      <td className="px-2 py-1">
-        <div className="max-w-[200px] truncate" title={product.name}>
-          {product.name}
-        </div>
-      </td>
-      
-      {/* 3. 価格 */}
-      <td className="px-2 py-1 text-center">
-        {product.salePrice ? (
-          <div>
-            <div className="line-through text-gray-400 text-xs">
-              {product.price.toLocaleString()}
-            </div>
-            <div className="text-red-400 font-bold text-sm">
-              {product.salePrice.toLocaleString()}
-            </div>
+        </td>
+        
+        {/* 10. パートナーキャリア不可 */}
+        <td className="px-2 py-1 text-center">
+          <div className="flex items-center justify-center">
+            {hasPartnerCarrierUnavailable ? (
+              <Truck className="w-4 h-4 text-orange-500" />
+            ) : (
+              <span className="text-gray-400 text-xs">-</span>
+            )}
           </div>
-        ) : (
-          <div className="text-sm">{product.price.toLocaleString()}</div>
-        )}
-      </td>
-      
-      {/* 4. 仕入価格 */}
-      <td className="px-2 py-1">
-        {getPurchasePriceDisplay()}
-      </td>
-      
-      {/* 5. ASIN管理 */}
-      <td className="px-2 py-1">
-        <MultipleAsinManager
-          productIndex={_rowIndex}
-          productPrice={product.price}
-          productSalePrice={product.salePrice}
-          asins={product.asins || []}
-          onAsinAdd={onAsinAdd}
-          onAsinRemove={onAsinRemove}
-          onDangerousGoodsChange={onDangerousGoodsChange}
-          onPartnerCarrierChange={onPartnerCarrierChange}
-          shopPricingConfig={shopPricingConfig}
-          userDiscountSettings={userDiscountSettings}
-          isLoading={isLoadingAsins}
-        />
-      </td>
-      
-      {/* 6. 危険物 */}
-      <td className="px-2 py-1 text-center">
-        <div className="flex items-center justify-center">
-          {hasDangerousGoods ? (
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
-        </div>
-      </td>
-      
-      {/* 7. パートナーキャリア不可 */}
-      <td className="px-2 py-1 text-center">
-        <div className="flex items-center justify-center">
-          {hasPartnerCarrierUnavailable ? (
-            <Truck className="w-4 h-4 text-orange-500" />
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
-        </div>
-      </td>
-      
-      {/* 8. 非表示 */}
-      <td className="px-2 py-1 text-center">
-        <input
-          type="checkbox"
-          checked={!!product.hidden}
-          onChange={(e) => onHiddenChange(_rowIndex, e.target.checked)}
-          className="w-4 h-4"
-        />
-      </td>
-      
-      {/* 9. メモ */}
-      <td className="px-2 py-1">
-        <input
-          type="text"
-          className="border px-1 py-0.5 rounded w-28 bg-white text-black text-xs"
-          value={memoValue}
-          onChange={(e) => handleMemoChange(e.target.value)}
-          placeholder="メモ"
-          title="商品メモ（自動保存）"
-        />
-      </td>
-    </tr>
+        </td>
+        
+        {/* 11. 非表示 */}
+        <td className="px-2 py-1 text-center">
+          <input
+            type="checkbox"
+            checked={!!product.hidden}
+            onChange={(e) => onHiddenChange(_rowIndex, e.target.checked)}
+            className="w-4 h-4"
+          />
+        </td>
+        
+        {/* 12. メモ */}
+        <td className="px-2 py-1">
+          <input
+            type="text"
+            className="border px-1 py-0.5 rounded w-28 bg-white text-black text-xs"
+            value={memoValue}
+            onChange={(e) => handleMemoChange(e.target.value)}
+            placeholder="メモ"
+            title="商品メモ（自動保存）"
+          />
+        </td>
+      </tr>
+
+      {/* 展開された詳細行 */}
+      {isExpanded && product.asins && product.asins.length > 0 && (
+        <tr className={`${rowClassName} border-t-0`}>
+          <td colSpan={12} className="px-4 py-3 bg-gray-50">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm text-gray-700 mb-3">
+                ASIN詳細情報 ({product.asins.length}件)
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-3 py-2 text-left border-r">ASIN</th>
+                      <th className="px-3 py-2 text-left border-r">商品名</th>
+                      <th className="px-3 py-2 text-center border-r">Amazon価格</th>
+                      <th className="px-3 py-2 text-center border-r">月販数</th>
+                      <th className="px-3 py-2 text-center border-r">手数料</th>
+                      <th className="px-3 py-2 text-center border-r">FBA料</th>
+                      <th className="px-3 py-2 text-center border-r">利益額</th>
+                      <th className="px-3 py-2 text-center border-r">利益率</th>
+                      <th className="px-3 py-2 text-center border-r">ROI</th>
+                      <th className="px-3 py-2 text-center border-r">危険物</th>
+                      <th className="px-3 py-2 text-center">ﾊﾟｰｷｬﾘ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.asins.map((asin, asinIndex) => {
+                      const profitResult = shopPricingConfig && 
+                        asin.price > 0 && 
+                        asin.sellingFee !== null && 
+                        asin.fbaFee !== null
+                        ? calculateProfitWithShopPricing(
+                            product.price,
+                            product.salePrice,
+                            asin.price,
+                            asin.sellingFee,
+                            asin.fbaFee,
+                            shopPricingConfig,
+                            userDiscountSettings
+                          )
+                        : null;
+
+                      const needsManualInput = !asin.productName || asin.price === 0 || 
+                                             asin.sellingFee === null || asin.fbaFee === null;
+
+                      return (
+                        <tr key={asin.asin} className="border-t hover:bg-gray-50">
+                          <td className="px-3 py-2 border-r">
+                            <div className="font-mono text-blue-600 font-medium">
+                              {asin.asin}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 border-r">
+                            <div className="max-w-[200px] truncate" title={asin.productName}>
+                              {asin.productName || (
+                                <span className="text-amber-600 italic">手動入力が必要</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {asin.price ? `${asin.price.toLocaleString()}円` : (
+                              <span className="text-amber-600">未設定</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {asin.soldUnit ? asin.soldUnit.toLocaleString() : "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {asin.sellingFee !== null ? `${asin.sellingFee}%` : (
+                              <span className="text-amber-600">未設定</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {asin.fbaFee !== null ? `${asin.fbaFee.toLocaleString()}円` : (
+                              <span className="text-amber-600">未設定</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {profitResult && !needsManualInput ? (
+                              <span className={`font-medium ${
+                                profitResult.profit >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {profitResult.profit.toLocaleString()}円
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {profitResult && !needsManualInput ? (
+                              <span className={`font-medium ${
+                                profitResult.profitMargin >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {Math.round(profitResult.profitMargin)}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            {profitResult && !needsManualInput ? (
+                              <span className={`font-medium ${
+                                profitResult.roi >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {Math.round(profitResult.roi)}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center border-r">
+                            <input
+                              type="checkbox"
+                              checked={asin.isDangerousGoods || false}
+                              onChange={(e) => onDangerousGoodsChange(_rowIndex, asinIndex, e.target.checked)}
+                              className="w-3 h-3 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={asin.isPartnerCarrierUnavailable || false}
+                              onChange={(e) => onPartnerCarrierChange(_rowIndex, asinIndex, e.target.checked)}
+                              className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 };
