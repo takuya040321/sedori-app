@@ -1,5 +1,5 @@
-// src\components\product-list\ProductTable.tsx
-import React, { forwardRef, useImperativeHandle } from "react";
+// src/components/product-list/ProductTable.tsx
+import React, { forwardRef, useImperativeHandle, useMemo } from "react";
 import { Product } from "@/types/product";
 import { useProductTable } from "@/hooks/useProductTable";
 import { useUserDiscountSettings } from "@/hooks/useUserDiscountSettings";
@@ -18,6 +18,15 @@ export interface ProductTableProps {
 // 外部から呼び出したいメソッドを定義
 export interface ProductTableHandle {
   mutate: () => void;
+}
+
+// 商品を行に展開する型
+interface ProductRow {
+  product: Product;
+  originalIndex: number;
+  asinInfo?: any;
+  asinIndex?: number;
+  isFirstAsinRow: boolean;
 }
 
 export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
@@ -51,6 +60,40 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
     useImperativeHandle(ref, () => ({
       mutate,
     }));
+
+    // 商品を行に展開
+    const expandedRows = useMemo(() => {
+      const rows: ProductRow[] = [];
+      
+      products.forEach((product) => {
+        // 元の配列でのインデックスを取得
+        const originalIndex = allProducts.findIndex(p => 
+          p.name === product.name && p.updatedAt === product.updatedAt
+        );
+
+        if (product.asins && product.asins.length > 0) {
+          // ASINがある場合：ASIN数分の行を作成
+          product.asins.forEach((asinInfo, asinIndex) => {
+            rows.push({
+              product,
+              originalIndex,
+              asinInfo,
+              asinIndex,
+              isFirstAsinRow: asinIndex === 0,
+            });
+          });
+        } else {
+          // ASINがない場合：1行のみ作成
+          rows.push({
+            product,
+            originalIndex,
+            isFirstAsinRow: true,
+          });
+        }
+      });
+
+      return rows;
+    }, [products, allProducts]);
 
     if (isLoading) {
       return (
@@ -102,42 +145,38 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 商品テーブル */}
         <div className="minimal-card overflow-hidden">
           <div className="overflow-auto max-h-[70vh]" style={{ scrollbarWidth: 'thin' }}>
-            <table className="minimal-table w-full table-fixed">
+            <table className="minimal-table w-full">
               <ProductTableHeader
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
               />
               <tbody>
-                {products.map((product, index) => {
-                  // 元の配列でのインデックスを取得
-                  const originalIndex = allProducts.findIndex(p => 
-                    p.name === product.name && p.updatedAt === product.updatedAt
-                  );
-                  
-                  return (
-                    <ProductTableRow
-                      key={`${product.name}-${product.updatedAt}`}
-                      product={product}
-                      rowIndex={originalIndex}
-                      onHiddenChange={handleHiddenChange}
-                      onMemoChange={handleMemoChange}
-                      onAsinAdd={handleAsinAdd}
-                      onAsinRemove={handleAsinRemove}
-                      onDangerousGoodsChange={handleDangerousGoodsChange}
-                      onPartnerCarrierChange={handlePartnerCarrierChange}
-                      shopPricingConfig={shopPricingConfig}
-                      userDiscountSettings={userDiscountSettings}
-                      isLoadingAsins={loadingProductIndexes.includes(originalIndex)}
-                    />
-                  );
-                })}
+                {expandedRows.map((row, index) => (
+                  <ProductTableRow
+                    key={`${row.product.name}-${row.product.updatedAt}-${row.asinIndex || 0}`}
+                    product={row.product}
+                    rowIndex={row.originalIndex}
+                    asinInfo={row.asinInfo}
+                    asinIndex={row.asinIndex}
+                    isFirstAsinRow={row.isFirstAsinRow}
+                    onHiddenChange={handleHiddenChange}
+                    onMemoChange={handleMemoChange}
+                    onAsinAdd={handleAsinAdd}
+                    onAsinRemove={handleAsinRemove}
+                    onDangerousGoodsChange={handleDangerousGoodsChange}
+                    onPartnerCarrierChange={handlePartnerCarrierChange}
+                    shopPricingConfig={shopPricingConfig}
+                    userDiscountSettings={userDiscountSettings}
+                    isLoadingAsins={loadingProductIndexes.includes(row.originalIndex)}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
           
           {/* 検索結果が0件の場合 */}
-          {products.length === 0 && (
+          {expandedRows.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               <p className="text-lg font-medium mb-2">商品が見つかりません</p>
               <p className="text-sm">検索条件やフィルターを変更してお試しください</p>
@@ -180,6 +219,9 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             🔧 テーブル機能について
           </h4>
           <div className="text-sm text-amber-800 space-y-2">
+            <p>
+              • <strong>複数ASIN表示</strong>: 1つの商品に複数ASINがある場合、ASIN数分の行で表示
+            </p>
             <p>
               • <strong>列幅調整</strong>: 各列の境界をドラッグして幅を調整できます
             </p>

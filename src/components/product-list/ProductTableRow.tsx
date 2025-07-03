@@ -1,15 +1,18 @@
 // src/components/product-list/ProductTableRow.tsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateActualCost, calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
-import { AlertTriangle, Truck, ChevronDown, ChevronUp } from "lucide-react";
-import { MultipleAsinManager } from "./MultipleAsinManager";
+import { AlertTriangle, Truck, Plus, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   product: Product;
   rowIndex: number;
+  asinInfo?: AsinInfo;
+  asinIndex?: number;
+  isFirstAsinRow?: boolean;
   onHiddenChange: (_rowIndex: number, _checked: boolean) => void;
   onMemoChange: (_rowIndex: number, _memo: string) => void;
   onAsinAdd: (_rowIndex: number, _asin: string) => void;
@@ -23,7 +26,10 @@ interface Props {
 
 export const ProductTableRow: React.FC<Props> = ({
   product,
-  rowIndex: _rowIndex,
+  rowIndex,
+  asinInfo,
+  asinIndex,
+  isFirstAsinRow = true,
   onHiddenChange,
   onMemoChange,
   onAsinAdd,
@@ -35,22 +41,37 @@ export const ProductTableRow: React.FC<Props> = ({
   isLoadingAsins = false,
 }) => {
   const [memoValue, setMemoValue] = useState(product.memo || "");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [newAsin, setNewAsin] = useState("");
+  const [isAddingAsin, setIsAddingAsin] = useState(false);
   const memoTimeoutRef = useRef<NodeJS.Timeout>();
 
   // メモの変更をデバウンス処理
   const handleMemoChange = (value: string) => {
     setMemoValue(value);
     
-    // 既存のタイマーをクリア
     if (memoTimeoutRef.current) {
       clearTimeout(memoTimeoutRef.current);
     }
     
-    // 1秒後に保存
     memoTimeoutRef.current = setTimeout(() => {
-      onMemoChange(_rowIndex, value);
+      onMemoChange(rowIndex, value);
     }, 1000);
+  };
+
+  // ASIN追加処理
+  const handleAddAsin = async () => {
+    if (newAsin.length === 10) {
+      setIsAddingAsin(true);
+      await onAsinAdd(rowIndex, newAsin);
+      setNewAsin("");
+      setIsAddingAsin(false);
+    }
+  };
+
+  // ASIN入力の検証とフォーマット
+  const handleAsinInputChange = (value: string) => {
+    const formatted = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+    setNewAsin(formatted);
   };
 
   // 仕入価格表示の生成
@@ -59,7 +80,6 @@ export const ProductTableRow: React.FC<Props> = ({
       return `${(product.salePrice || product.price).toLocaleString()}円`;
     }
 
-    // 実際の仕入価格を計算
     const actualCost = calculateActualCost(
       product.price,
       product.salePrice,
@@ -118,68 +138,59 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
-  // 最適なASINの利益情報を計算（最も利益率の高いASIN）
-  const getBestProfitInfo = () => {
-    if (!product.asins || product.asins.length === 0 || !shopPricingConfig) {
+  // 利益情報を計算
+  const getProfitInfo = () => {
+    if (!asinInfo || !shopPricingConfig || asinInfo.price === 0 || 
+        asinInfo.sellingFee === null || asinInfo.fbaFee === null) {
       return { profit: null, profitMargin: null, roi: null };
     }
 
-    let bestProfit = null;
-    let bestProfitMargin = -Infinity;
-    let bestROI = null;
-
-    for (const asin of product.asins) {
-      if (asin.price > 0 && asin.sellingFee !== null && asin.fbaFee !== null) {
-        const profitResult = calculateProfitWithShopPricing(
-          product.price,
-          product.salePrice,
-          asin.price,
-          asin.sellingFee,
-          asin.fbaFee,
-          shopPricingConfig,
-          userDiscountSettings
-        );
-
-        if (profitResult.profitMargin > bestProfitMargin) {
-          bestProfitMargin = profitResult.profitMargin;
-          bestProfit = profitResult.profit;
-          bestROI = profitResult.roi;
-        }
-      }
-    }
+    const profitResult = calculateProfitWithShopPricing(
+      product.price,
+      product.salePrice,
+      asinInfo.price,
+      asinInfo.sellingFee,
+      asinInfo.fbaFee,
+      shopPricingConfig,
+      userDiscountSettings
+    );
 
     return {
-      profit: bestProfit,
-      profitMargin: bestProfitMargin === -Infinity ? null : bestProfitMargin,
-      roi: bestROI,
+      profit: profitResult.profit,
+      profitMargin: profitResult.profitMargin,
+      roi: profitResult.roi,
     };
   };
 
-  const bestProfitInfo = getBestProfitInfo();
+  const profitInfo = getProfitInfo();
 
-  // 危険物があるかチェック
-  const hasDangerousGoods = product.asins?.some(asin => asin.isDangerousGoods) || false;
-  
-  // パートナーキャリア不可があるかチェック
-  const hasPartnerCarrierUnavailable = product.asins?.some(asin => asin.isPartnerCarrierUnavailable) || false;
+  // 手動入力が必要かチェック
+  const needsManualInput = asinInfo && (!asinInfo.productName || asinInfo.price === 0 || 
+                          asinInfo.sellingFee === null || asinInfo.fbaFee === null);
 
   // 行のスタイル（危険物・パートナーキャリア不可の場合は色分け）
   let rowClassName = "border-b transition hover:bg-accent/30";
-  if (hasDangerousGoods && hasPartnerCarrierUnavailable) {
+  
+  if (asinInfo?.isDangerousGoods && asinInfo?.isPartnerCarrierUnavailable) {
     rowClassName += " bg-gradient-to-r from-red-50 to-orange-50";
-  } else if (hasDangerousGoods) {
+  } else if (asinInfo?.isDangerousGoods) {
     rowClassName += " bg-red-50";
-  } else if (hasPartnerCarrierUnavailable) {
+  } else if (asinInfo?.isPartnerCarrierUnavailable) {
     rowClassName += " bg-orange-50";
   } else {
     rowClassName += " bg-background text-foreground";
   }
 
+  // 同じ商品の2行目以降は薄いボーダーで区別
+  if (!isFirstAsinRow) {
+    rowClassName += " border-l-4 border-l-blue-200";
+  }
+
   return (
-    <>
-      <tr className={rowClassName}>
-        {/* 1. 画像 */}
-        <td className="px-2 py-1">
+    <tr className={rowClassName}>
+      {/* 1. 画像 - 最初の行のみ表示 */}
+      <td className="px-2 py-1">
+        {isFirstAsinRow ? (
           <div className="relative">
             <Avatar className="w-16 h-16 rounded-none">
               {product.imageUrl ? (
@@ -192,31 +203,41 @@ export const ProductTableRow: React.FC<Props> = ({
                 <AvatarFallback className="text-[10px]">No</AvatarFallback>
               )}
             </Avatar>
-            <div className="absolute -top-1 -right-1 flex gap-1">
-              {hasDangerousGoods && (
-                <div className="bg-red-500 rounded-full p-1">
-                  <AlertTriangle className="w-3 h-3 text-white" />
-                </div>
-              )}
-              {hasPartnerCarrierUnavailable && (
-                <div className="bg-orange-500 rounded-full p-1">
-                  <Truck className="w-3 h-3 text-white" />
-                </div>
-              )}
-            </div>
+            {(asinInfo?.isDangerousGoods || asinInfo?.isPartnerCarrierUnavailable) && (
+              <div className="absolute -top-1 -right-1 flex gap-1">
+                {asinInfo?.isDangerousGoods && (
+                  <div className="bg-red-500 rounded-full p-1">
+                    <AlertTriangle className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                {asinInfo?.isPartnerCarrierUnavailable && (
+                  <div className="bg-orange-500 rounded-full p-1">
+                    <Truck className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </td>
-        
-        {/* 2. 商品名 */}
-        <td className="px-2 py-1">
+        ) : (
+          <div className="w-16 h-16"></div>
+        )}
+      </td>
+      
+      {/* 2. 商品名 - 最初の行のみ表示 */}
+      <td className="px-2 py-1">
+        {isFirstAsinRow ? (
           <div className="max-w-[200px] truncate" title={product.name}>
             {product.name}
           </div>
-        </td>
-        
-        {/* 3. 価格 */}
-        <td className="px-2 py-1 text-center">
-          {product.salePrice ? (
+        ) : (
+          <div className="text-gray-400 text-xs italic">↳ 追加ASIN</div>
+        )}
+      </td>
+      
+      {/* 3. 価格 - 最初の行のみ表示 */}
+      <td className="px-2 py-1 text-center">
+        {isFirstAsinRow ? (
+          product.salePrice ? (
             <div>
               <div className="line-through text-gray-400 text-xs">
                 {product.price.toLocaleString()}
@@ -227,116 +248,217 @@ export const ProductTableRow: React.FC<Props> = ({
             </div>
           ) : (
             <div className="text-sm">{product.price.toLocaleString()}</div>
-          )}
-        </td>
-        
-        {/* 4. 仕入価格 */}
-        <td className="px-2 py-1">
-          {getPurchasePriceDisplay()}
-        </td>
-        
-        {/* 5. ASIN管理 */}
-        <td className="px-2 py-1">
+          )
+        ) : null}
+      </td>
+      
+      {/* 4. 仕入価格 - 最初の行のみ表示 */}
+      <td className="px-2 py-1">
+        {isFirstAsinRow ? getPurchasePriceDisplay() : null}
+      </td>
+      
+      {/* 5. ASIN */}
+      <td className="px-2 py-1">
+        {asinInfo ? (
           <div className="flex items-center gap-2">
-            <MultipleAsinManager
-              productIndex={_rowIndex}
-              productPrice={product.price}
-              productSalePrice={product.salePrice}
-              asins={product.asins || []}
-              onAsinAdd={onAsinAdd}
-              onAsinRemove={onAsinRemove}
-              onDangerousGoodsChange={onDangerousGoodsChange}
-              onPartnerCarrierChange={onPartnerCarrierChange}
-              shopPricingConfig={shopPricingConfig}
-              userDiscountSettings={userDiscountSettings}
-              isLoading={isLoadingAsins}
-            />
-            {product.asins && product.asins.length > 0 && (
+            <div className="font-mono text-blue-600 font-medium text-sm">
+              {asinInfo.asin}
+            </div>
+            {asinIndex !== undefined && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-6 w-6 p-0"
+                onClick={() => onAsinRemove(rowIndex, asinIndex)}
+                className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
               >
-                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                <Trash2 className="w-3 h-3" />
               </Button>
             )}
           </div>
-        </td>
-        
-        {/* 6. 利益額 */}
-        <td className="px-2 py-1 text-center">
-          {bestProfitInfo.profit !== null ? (
-            <div className={`font-medium text-sm ${
-              bestProfitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
-            }`}>
-              {bestProfitInfo.profit.toLocaleString()}円
-            </div>
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
-        </td>
-        
-        {/* 7. 利益率 */}
-        <td className="px-2 py-1 text-center">
-          {bestProfitInfo.profitMargin !== null ? (
-            <div className={`font-medium text-sm ${
-              bestProfitInfo.profitMargin >= 0 ? "text-green-600" : "text-red-600"
-            }`}>
-              {Math.round(bestProfitInfo.profitMargin)}%
-            </div>
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
-        </td>
-        
-        {/* 8. ROI */}
-        <td className="px-2 py-1 text-center">
-          {bestProfitInfo.roi !== null ? (
-            <div className={`font-medium text-sm ${
-              bestProfitInfo.roi >= 0 ? "text-green-600" : "text-red-600"
-            }`}>
-              {Math.round(bestProfitInfo.roi)}%
-            </div>
-          ) : (
-            <span className="text-gray-400 text-xs">-</span>
-          )}
-        </td>
-        
-        {/* 9. 危険物 */}
-        <td className="px-2 py-1 text-center">
-          <div className="flex items-center justify-center">
-            {hasDangerousGoods ? (
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-            ) : (
-              <span className="text-gray-400 text-xs">-</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={newAsin}
+              onChange={(e) => handleAsinInputChange(e.target.value)}
+              placeholder="新しいASIN"
+              className="w-28 h-8 text-xs"
+              maxLength={10}
+            />
+            <Button
+              size="sm"
+              onClick={handleAddAsin}
+              disabled={newAsin.length !== 10 || isAddingAsin}
+              className="h-8 px-2 text-xs"
+            >
+              {isAddingAsin ? (
+                <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Plus className="w-3 h-3" />
+              )}
+            </Button>
+          </div>
+        )}
+      </td>
+      
+      {/* 6. Amazon商品名 */}
+      <td className="px-2 py-1">
+        {asinInfo ? (
+          <div className="max-w-[200px] truncate" title={asinInfo.productName}>
+            {asinInfo.productName || (
+              <div className="flex items-center gap-1 text-amber-600">
+                <Edit className="w-3 h-3" />
+                <span className="text-xs">手動入力が必要</span>
+              </div>
             )}
           </div>
-        </td>
-        
-        {/* 10. パートナーキャリア不可 */}
-        <td className="px-2 py-1 text-center">
-          <div className="flex items-center justify-center">
-            {hasPartnerCarrierUnavailable ? (
-              <Truck className="w-4 h-4 text-orange-500" />
-            ) : (
-              <span className="text-gray-400 text-xs">-</span>
-            )}
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 7. Amazon価格 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo ? (
+          asinInfo.price ? (
+            <div className="text-sm font-medium">
+              {asinInfo.price.toLocaleString()}円
+            </div>
+          ) : (
+            <span className="text-amber-600 text-xs">未設定</span>
+          )
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 8. 月販数 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo ? (
+          asinInfo.soldUnit ? (
+            <div className="text-sm">
+              {asinInfo.soldUnit.toLocaleString()}
+            </div>
+          ) : (
+            <span className="text-gray-400 text-xs">-</span>
+          )
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 9. 手数料 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo ? (
+          asinInfo.sellingFee !== null ? (
+            <div className="text-sm">
+              {asinInfo.sellingFee}%
+            </div>
+          ) : (
+            <span className="text-amber-600 text-xs">未設定</span>
+          )
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 10. FBA料 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo ? (
+          asinInfo.fbaFee !== null ? (
+            <div className="text-sm">
+              {asinInfo.fbaFee.toLocaleString()}円
+            </div>
+          ) : (
+            <span className="text-amber-600 text-xs">未設定</span>
+          )
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 11. 利益額 */}
+      <td className="px-2 py-1 text-center">
+        {profitInfo.profit !== null && !needsManualInput ? (
+          <div className={`font-medium text-sm ${
+            profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
+          }`}>
+            {profitInfo.profit.toLocaleString()}円
           </div>
-        </td>
-        
-        {/* 11. 非表示 */}
-        <td className="px-2 py-1 text-center">
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 12. 利益率 */}
+      <td className="px-2 py-1 text-center">
+        {profitInfo.profitMargin !== null && !needsManualInput ? (
+          <div className={`font-medium text-sm ${
+            profitInfo.profitMargin >= 0 ? "text-green-600" : "text-red-600"
+          }`}>
+            {Math.round(profitInfo.profitMargin)}%
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 13. ROI */}
+      <td className="px-2 py-1 text-center">
+        {profitInfo.roi !== null && !needsManualInput ? (
+          <div className={`font-medium text-sm ${
+            profitInfo.roi >= 0 ? "text-green-600" : "text-red-600"
+          }`}>
+            {Math.round(profitInfo.roi)}%
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 14. 危険物 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo && asinIndex !== undefined ? (
+          <input
+            type="checkbox"
+            checked={asinInfo.isDangerousGoods || false}
+            onChange={(e) => onDangerousGoodsChange(rowIndex, asinIndex, e.target.checked)}
+            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+          />
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 15. パートナーキャリア不可 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo && asinIndex !== undefined ? (
+          <input
+            type="checkbox"
+            checked={asinInfo.isPartnerCarrierUnavailable || false}
+            onChange={(e) => onPartnerCarrierChange(rowIndex, asinIndex, e.target.checked)}
+            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+          />
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 16. 非表示 - 最初の行のみ表示 */}
+      <td className="px-2 py-1 text-center">
+        {isFirstAsinRow ? (
           <input
             type="checkbox"
             checked={!!product.hidden}
-            onChange={(e) => onHiddenChange(_rowIndex, e.target.checked)}
+            onChange={(e) => onHiddenChange(rowIndex, e.target.checked)}
             className="w-4 h-4"
           />
-        </td>
-        
-        {/* 12. メモ */}
-        <td className="px-2 py-1">
+        ) : null}
+      </td>
+      
+      {/* 17. メモ - 最初の行のみ表示 */}
+      <td className="px-2 py-1">
+        {isFirstAsinRow ? (
           <input
             type="text"
             className="border px-1 py-0.5 rounded w-28 bg-white text-black text-xs"
@@ -345,145 +467,8 @@ export const ProductTableRow: React.FC<Props> = ({
             placeholder="メモ"
             title="商品メモ（自動保存）"
           />
-        </td>
-      </tr>
-
-      {/* 展開された詳細行 */}
-      {isExpanded && product.asins && product.asins.length > 0 && (
-        <tr className={`${rowClassName} border-t-0`}>
-          <td colSpan={12} className="px-4 py-3 bg-gray-50">
-            <div className="space-y-3">
-              <h4 className="font-semibold text-sm text-gray-700 mb-3">
-                ASIN詳細情報 ({product.asins.length}件)
-              </h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs border border-gray-200 rounded-lg">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-3 py-2 text-left border-r">ASIN</th>
-                      <th className="px-3 py-2 text-left border-r">商品名</th>
-                      <th className="px-3 py-2 text-center border-r">Amazon価格</th>
-                      <th className="px-3 py-2 text-center border-r">月販数</th>
-                      <th className="px-3 py-2 text-center border-r">手数料</th>
-                      <th className="px-3 py-2 text-center border-r">FBA料</th>
-                      <th className="px-3 py-2 text-center border-r">利益額</th>
-                      <th className="px-3 py-2 text-center border-r">利益率</th>
-                      <th className="px-3 py-2 text-center border-r">ROI</th>
-                      <th className="px-3 py-2 text-center border-r">危険物</th>
-                      <th className="px-3 py-2 text-center">ﾊﾟｰｷｬﾘ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {product.asins.map((asin, asinIndex) => {
-                      const profitResult = shopPricingConfig && 
-                        asin.price > 0 && 
-                        asin.sellingFee !== null && 
-                        asin.fbaFee !== null
-                        ? calculateProfitWithShopPricing(
-                            product.price,
-                            product.salePrice,
-                            asin.price,
-                            asin.sellingFee,
-                            asin.fbaFee,
-                            shopPricingConfig,
-                            userDiscountSettings
-                          )
-                        : null;
-
-                      const needsManualInput = !asin.productName || asin.price === 0 || 
-                                             asin.sellingFee === null || asin.fbaFee === null;
-
-                      return (
-                        <tr key={asin.asin} className="border-t hover:bg-gray-50">
-                          <td className="px-3 py-2 border-r">
-                            <div className="font-mono text-blue-600 font-medium">
-                              {asin.asin}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 border-r">
-                            <div className="max-w-[200px] truncate" title={asin.productName}>
-                              {asin.productName || (
-                                <span className="text-amber-600 italic">手動入力が必要</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {asin.price ? `${asin.price.toLocaleString()}円` : (
-                              <span className="text-amber-600">未設定</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {asin.soldUnit ? asin.soldUnit.toLocaleString() : "-"}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {asin.sellingFee !== null ? `${asin.sellingFee}%` : (
-                              <span className="text-amber-600">未設定</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {asin.fbaFee !== null ? `${asin.fbaFee.toLocaleString()}円` : (
-                              <span className="text-amber-600">未設定</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {profitResult && !needsManualInput ? (
-                              <span className={`font-medium ${
-                                profitResult.profit >= 0 ? "text-green-600" : "text-red-600"
-                              }`}>
-                                {profitResult.profit.toLocaleString()}円
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {profitResult && !needsManualInput ? (
-                              <span className={`font-medium ${
-                                profitResult.profitMargin >= 0 ? "text-green-600" : "text-red-600"
-                              }`}>
-                                {Math.round(profitResult.profitMargin)}%
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            {profitResult && !needsManualInput ? (
-                              <span className={`font-medium ${
-                                profitResult.roi >= 0 ? "text-green-600" : "text-red-600"
-                              }`}>
-                                {Math.round(profitResult.roi)}%
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-center border-r">
-                            <input
-                              type="checkbox"
-                              checked={asin.isDangerousGoods || false}
-                              onChange={(e) => onDangerousGoodsChange(_rowIndex, asinIndex, e.target.checked)}
-                              className="w-3 h-3 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={asin.isPartnerCarrierUnavailable || false}
-                              onChange={(e) => onPartnerCarrierChange(_rowIndex, asinIndex, e.target.checked)}
-                              className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
+        ) : null}
+      </td>
+    </tr>
   );
 };
