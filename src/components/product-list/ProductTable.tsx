@@ -204,6 +204,11 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                   <p>
                     • 最終仕入れ価格 = セール価格 × (100% - 基本割引% - 追加割引%)
                   </p>
+                  {shopName === 'dhc' && (
+                    <p className="text-blue-700 bg-blue-100 px-3 py-2 rounded-lg">
+                      🔢 <strong>複数個商品対応</strong>: 「2本」「3個」などの商品は個数で割って1個あたりの価格で利益計算
+                    </p>
+                  )}
                 </>
               )}
               <p className="text-xs mt-2 text-blue-700 bg-blue-100 px-3 py-2 rounded-lg">
@@ -240,6 +245,11 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             <p>
               • <strong>横スクロール</strong>: 画面いっぱいに表示、横スクロールで全情報を確認
             </p>
+            {shopName === 'dhc' && (
+              <p>
+                • <strong>1個あたり計算</strong>: DHCの複数個商品は自動で1個あたりの価格・利益を計算
+              </p>
+            )}
           </div>
         </div>
       </div>

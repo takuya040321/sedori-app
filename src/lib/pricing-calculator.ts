@@ -2,25 +2,58 @@
 import { ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calcProfit, calcProfitMargin, calcROI } from "./calc";
 
-// 実際の仕入れ価格を計算
+// 商品名から個数を検出する関数
+export function extractUnitCount(productName: string): { count: number; unitType: string } {
+  // 正規表現で数字 + 単位を検出
+  const patterns = [
+    { regex: /(\d+)本/g, unit: "本" },
+    { regex: /(\d+)個/g, unit: "個" },
+    { regex: /(\d+)セット/g, unit: "セット" },
+    { regex: /(\d+)袋/g, unit: "袋" },
+    { regex: /(\d+)包/g, unit: "包" },
+    { regex: /(\d+)粒/g, unit: "粒" },
+    { regex: /(\d+)錠/g, unit: "錠" },
+  ];
+
+  for (const pattern of patterns) {
+    const matches = Array.from(productName.matchAll(pattern.regex));
+    if (matches.length > 0) {
+      // 最後にマッチした数字を使用（例：「2本+1本プレゼント」の場合は「1本」を優先）
+      const lastMatch = matches[matches.length - 1];
+      const count = parseInt(lastMatch[1], 10);
+      if (count > 1) {
+        return { count, unitType: pattern.unit };
+      }
+    }
+  }
+
+  return { count: 1, unitType: "個" };
+}
+
+// 実際の仕入れ価格を計算（1個あたり対応）
 export function calculateActualCost(
   originalPrice: number,
   salePrice: number | undefined,
   config: ShopPricingConfig,
-  userDiscountSettings: UserDiscountSettings = {}
+  userDiscountSettings: UserDiscountSettings = {},
+  productName?: string
 ): number {
   // 基準価格を決定（セール価格があればセール価格、なければ通常価格）
   const basePrice = salePrice || originalPrice;
   
+  let actualCost = 0;
+  
   switch (config.priceCalculationType) {
     case 'fixed_discount':
       // VT: 固定額割引（400円引き）
-      return Math.max(0, basePrice - (config.fixedDiscount || 0));
+      actualCost = Math.max(0, basePrice - (config.fixedDiscount || 0));
+      break;
       
     case 'percentage_discount':
       // 固定割引率
       const discountRate = config.percentageDiscount || 0;
-      return basePrice * (1 - discountRate / 100);
+      actualCost = basePrice * (1 - discountRate / 100);
+      break;
       
     case 'user_configurable':
       // DHC: 基本割引 + ユーザー設定割引
@@ -28,11 +61,22 @@ export function calculateActualCost(
       const baseDiscountRate = config.percentageDiscount || 0;
       const userDiscountRate = userDiscountSettings[shopKey] || 0;
       const totalDiscountRate = baseDiscountRate + userDiscountRate;
-      return basePrice * (1 - totalDiscountRate / 100);
+      actualCost = basePrice * (1 - totalDiscountRate / 100);
+      break;
       
     default:
-      return basePrice;
+      actualCost = basePrice;
   }
+
+  // DHCの場合、商品名から個数を検出して1個あたりの価格を計算
+  if (config.shopName === 'dhc' && productName) {
+    const { count } = extractUnitCount(productName);
+    if (count > 1) {
+      actualCost = actualCost / count;
+    }
+  }
+
+  return actualCost;
 }
 
 // 利益計算結果
@@ -47,6 +91,11 @@ export interface ProfitCalculationResult {
     totalDiscount: number;
     discountType: string;
   };
+  unitInfo?: {
+    count: number;
+    unitType: string;
+    isPerUnit: boolean;
+  };
 }
 
 // 利益計算（ショップ別価格設定を考慮）
@@ -57,9 +106,10 @@ export function calculateProfitWithShopPricing(
   sellingFee: number,
   fbaFee: number,
   config: ShopPricingConfig,
-  userDiscountSettings: UserDiscountSettings = {}
+  userDiscountSettings: UserDiscountSettings = {},
+  productName?: string
 ): ProfitCalculationResult {
-  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings);
+  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings, productName);
   
   // 利益計算
   const profit = calcProfit(amazonPrice, sellingFee, fbaFee, actualCost);
@@ -71,6 +121,18 @@ export function calculateProfitWithShopPricing(
   let baseDiscount = 0;
   let userDiscount = 0;
   let discountType = "";
+  
+  // 単位情報
+  let unitInfo: { count: number; unitType: string; isPerUnit: boolean } | undefined;
+  
+  if (config.shopName === 'dhc' && productName) {
+    const { count, unitType } = extractUnitCount(productName);
+    unitInfo = {
+      count,
+      unitType,
+      isPerUnit: count > 1
+    };
+  }
   
   switch (config.priceCalculationType) {
     case 'fixed_discount':
@@ -105,6 +167,7 @@ export function calculateProfitWithShopPricing(
       totalDiscount: baseDiscount + userDiscount,
       discountType,
     },
+    unitInfo,
   };
 }
 
@@ -113,18 +176,28 @@ export function getDiscountDisplayText(
   originalPrice: number,
   salePrice: number | undefined,
   config: ShopPricingConfig,
-  userDiscountSettings: UserDiscountSettings = {}
+  userDiscountSettings: UserDiscountSettings = {},
+  productName?: string
 ): string {
   const basePrice = salePrice || originalPrice;
-  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings);
+  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings, productName);
+  
+  // DHCの場合、単位情報を取得
+  let unitSuffix = "";
+  if (config.shopName === 'dhc' && productName) {
+    const { count, unitType } = extractUnitCount(productName);
+    if (count > 1) {
+      unitSuffix = ` (1${unitType}あたり)`;
+    }
+  }
   
   switch (config.priceCalculationType) {
     case 'fixed_discount':
-      return `${basePrice.toLocaleString()}円 - ${config.fixedDiscount}円 = ${actualCost.toLocaleString()}円`;
+      return `${basePrice.toLocaleString()}円 - ${config.fixedDiscount}円 = ${actualCost.toLocaleString()}円${unitSuffix}`;
       
     case 'percentage_discount':
       const discountRate = config.percentageDiscount || 0;
-      return `${basePrice.toLocaleString()}円 × ${100 - discountRate}% = ${actualCost.toLocaleString()}円`;
+      return `${basePrice.toLocaleString()}円 × ${100 - discountRate}% = ${actualCost.toLocaleString()}円${unitSuffix}`;
       
     case 'user_configurable':
       const shopKey = `${config.category}-${config.shopName}`;
@@ -132,13 +205,25 @@ export function getDiscountDisplayText(
       const userDiscountRate = userDiscountSettings[shopKey] || 0;
       const totalDiscountRate = baseDiscountRate + userDiscountRate;
       
+      if (config.shopName === 'dhc' && productName) {
+        const { count } = extractUnitCount(productName);
+        if (count > 1) {
+          const totalCostAfterDiscount = basePrice * (1 - totalDiscountRate / 100);
+          if (userDiscountRate > 0) {
+            return `${basePrice.toLocaleString()}円 × ${100 - totalDiscountRate}% ÷ ${count} = ${actualCost.toLocaleString()}円/個 (基本${baseDiscountRate}% + 追加${userDiscountRate}%)`;
+          } else {
+            return `${basePrice.toLocaleString()}円 × ${100 - baseDiscountRate}% ÷ ${count} = ${actualCost.toLocaleString()}円/個`;
+          }
+        }
+      }
+      
       if (userDiscountRate > 0) {
-        return `${basePrice.toLocaleString()}円 × ${100 - totalDiscountRate}% (基本${baseDiscountRate}% + 追加${userDiscountRate}%) = ${actualCost.toLocaleString()}円`;
+        return `${basePrice.toLocaleString()}円 × ${100 - totalDiscountRate}% (基本${baseDiscountRate}% + 追加${userDiscountRate}%) = ${actualCost.toLocaleString()}円${unitSuffix}`;
       } else {
-        return `${basePrice.toLocaleString()}円 × ${100 - baseDiscountRate}% = ${actualCost.toLocaleString()}円`;
+        return `${basePrice.toLocaleString()}円 × ${100 - baseDiscountRate}% = ${actualCost.toLocaleString()}円${unitSuffix}`;
       }
       
     default:
-      return `${actualCost.toLocaleString()}円`;
+      return `${actualCost.toLocaleString()}円${unitSuffix}`;
   }
 }

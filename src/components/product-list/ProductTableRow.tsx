@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
-import { calculateActualCost, calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
+import { calculateActualCost, calculateProfitWithShopPricing, extractUnitCount } from "@/lib/pricing-calculator";
 import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +81,7 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
-  // 仕入価格表示の生成
+  // 仕入価格表示の生成（1個あたり対応）
   const getPurchasePriceDisplay = () => {
     if (!shopPricingConfig) {
       return `${(product.salePrice || product.price).toLocaleString()}円`;
@@ -91,8 +91,18 @@ export const ProductTableRow: React.FC<Props> = ({
       product.price,
       product.salePrice,
       shopPricingConfig,
-      userDiscountSettings
+      userDiscountSettings,
+      product.name // 商品名を渡して個数検出
     );
+
+    // DHCの場合、単位情報を取得
+    let unitInfo = null;
+    if (shopPricingConfig.shopName === 'dhc') {
+      const { count, unitType } = extractUnitCount(product.name);
+      if (count > 1) {
+        unitInfo = { count, unitType };
+      }
+    }
 
     switch (shopPricingConfig.priceCalculationType) {
       case 'fixed_discount':
@@ -100,6 +110,7 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
+              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{shopPricingConfig.fixedDiscount}円
@@ -117,9 +128,11 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
+              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{totalDiscountRate}%
+              {unitInfo && ` ÷ ${unitInfo.count}`}
               {userDiscountRate > 0 && (
                 <div>({baseDiscountRate}%+{userDiscountRate}%)</div>
               )}
@@ -133,9 +146,11 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
+              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{discountRate}%
+              {unitInfo && ` ÷ ${unitInfo.count}`}
             </div>
           </div>
         );
@@ -145,7 +160,7 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
-  // 利益情報を計算
+  // 利益情報を計算（1個あたり対応）
   const getProfitInfo = () => {
     if (!asinInfo || !shopPricingConfig || asinInfo.price === 0 || 
         asinInfo.sellingFee === null || asinInfo.fbaFee === null) {
@@ -159,13 +174,15 @@ export const ProductTableRow: React.FC<Props> = ({
       asinInfo.sellingFee,
       asinInfo.fbaFee,
       shopPricingConfig,
-      userDiscountSettings
+      userDiscountSettings,
+      product.name // 商品名を渡して個数検出
     );
 
     return {
       profit: profitResult.profit,
       profitMargin: profitResult.profitMargin,
       roi: profitResult.roi,
+      unitInfo: profitResult.unitInfo,
     };
   };
 
@@ -395,13 +412,16 @@ export const ProductTableRow: React.FC<Props> = ({
         )}
       </td>
       
-      {/* 11. 利益額 */}
+      {/* 11. 利益額（1個あたり） */}
       <td className="px-2 py-1 text-center">
         {profitInfo.profit !== null && !needsManualInput ? (
           <div className={`font-medium text-sm ${
             profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
           }`}>
             {profitInfo.profit.toLocaleString()}円
+            {profitInfo.unitInfo?.isPerUnit && (
+              <div className="text-xs text-gray-500">1{profitInfo.unitInfo.unitType}あたり</div>
+            )}
           </div>
         ) : (
           <span className="text-gray-400 text-xs">-</span>
