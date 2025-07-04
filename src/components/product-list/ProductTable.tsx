@@ -107,7 +107,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
     }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         {/* ユーザー設定割引コントロール */}
         {shopPricingConfig?.allowUserDiscount && (
           <div className="minimal-card p-6">
@@ -142,10 +142,10 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
           filteredCount={products.length}
         />
 
-        {/* 商品テーブル */}
-        <div className="minimal-card overflow-hidden">
-          <div className="overflow-auto max-h-[70vh]" style={{ scrollbarWidth: 'thin' }}>
-            <table className="minimal-table w-full">
+        {/* 商品テーブル - 画面いっぱいに表示 */}
+        <div className="minimal-card overflow-hidden w-full">
+          <div className="overflow-auto max-h-[80vh] w-full" style={{ scrollbarWidth: 'thin' }}>
+            <table className="minimal-table w-full min-w-[1800px]">
               <ProductTableHeader
                 sortField={sortField}
                 sortDirection={sortDirection}
@@ -236,6 +236,9 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             </p>
             <p>
               • <strong>色分け表示</strong>: 危険物（赤）、ﾊﾟｰｷｬﾘ不可（オレンジ）、両方（グラデーション）
+            </p>
+            <p>
+              • <strong>横スクロール</strong>: 画面いっぱいに表示、横スクロールで全情報を確認
             </p>
           </div>
         </div>

@@ -138,9 +138,10 @@
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
 }
 
-/* テーブルスタイル */
+/* テーブルスタイル - 画面いっぱい対応 */
 .minimal-table {
   @apply w-full border-collapse;
+  min-width: 1800px; /* 最小幅を設定して横スクロールを確保 */
 }
 
 .minimal-table th {
@@ -213,4 +214,37 @@
 .minimal-table th:hover::after {
   background: #3b82f6;
   opacity: 0.3;
+}
+
+/* 全幅表示用のスタイル */
+.full-width-container {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+/* 横スクロール改善 */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 80vh;
+  width: 100%;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
