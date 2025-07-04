@@ -248,3 +248,30 @@
 .table-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Amazon商品名の折り返し表示 */
+.amazon-product-name {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+  max-width: 250px;
+}
+
+/* クリック可能なAmazon商品名のスタイル */
+.amazon-link {
+  @apply cursor-pointer text-blue-600 hover:text-blue-800 hover:underline transition-colors;
+}
+
+.amazon-link:hover {
+  @apply bg-blue-50 rounded;
+}
+
+/* 外部リンクアイコンのアニメーション */
+.external-link-icon {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.amazon-link:hover .external-link-icon {
+  @apply opacity-100;
+}

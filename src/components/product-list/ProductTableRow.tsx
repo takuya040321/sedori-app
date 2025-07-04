@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateActualCost, calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
-import { AlertTriangle, Truck, Plus, Trash2, Edit } from "lucide-react";
+import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -72,6 +72,13 @@ export const ProductTableRow: React.FC<Props> = ({
   const handleAsinInputChange = (value: string) => {
     const formatted = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
     setNewAsin(formatted);
+  };
+
+  // Amazon商品ページを開く
+  const handleAmazonLinkClick = () => {
+    if (asinInfo?.url) {
+      window.open(asinInfo.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // 仕入価格表示の生成
@@ -226,8 +233,10 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 2. 商品名 - 最初の行のみ表示 */}
       <td className="px-2 py-1">
         {isFirstAsinRow ? (
-          <div className="max-w-[200px] truncate" title={product.name}>
-            {product.name}
+          <div className="max-w-[200px]" title={product.name}>
+            <div className="text-sm leading-tight break-words">
+              {product.name}
+            </div>
           </div>
         ) : (
           <div className="text-gray-400 text-xs italic">↳ 追加ASIN</div>
@@ -301,17 +310,26 @@ export const ProductTableRow: React.FC<Props> = ({
         )}
       </td>
       
-      {/* 6. Amazon商品名 */}
+      {/* 6. Amazon商品名 - 折り返し表示とクリック機能 */}
       <td className="px-2 py-1">
         {asinInfo ? (
-          <div className="max-w-[200px] truncate" title={asinInfo.productName}>
-            {asinInfo.productName || (
-              <div className="flex items-center gap-1 text-amber-600">
-                <Edit className="w-3 h-3" />
-                <span className="text-xs">手動入力が必要</span>
+          asinInfo.productName ? (
+            <div 
+              className="max-w-[250px] cursor-pointer group"
+              onClick={handleAmazonLinkClick}
+              title={`${asinInfo.productName}\nクリックでAmazonページを開く`}
+            >
+              <div className="text-sm leading-tight break-words text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
+                {asinInfo.productName}
+                <ExternalLink className="w-3 h-3 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-amber-600">
+              <Edit className="w-3 h-3" />
+              <span className="text-xs">手動入力が必要</span>
+            </div>
+          )
         ) : (
           <span className="text-gray-400 text-xs">-</span>
         )}
