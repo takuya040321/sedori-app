@@ -49,7 +49,7 @@ async function testDatabaseConnection() {
     // shopsテーブルの存在確認
     const { data, error } = await supabase
       .from('shops')
-      .select('count(*)')
+      .select('id')
       .limit(1);
     
     if (error) {
