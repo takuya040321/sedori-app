@@ -24,7 +24,11 @@ export function useProductTable(category: string, shopName: string, initialProdu
     search: '',
     showHiddenOnly: false,
     showDangerousGoods: false,
+    excludeDangerousGoods: false,
     showPartnerCarrierUnavailable: false,
+    excludePartnerCarrierUnavailable: false,
+    excludeOfficialStore: false,
+    excludeAmazonStore: false,
     showProfitableOnly: false,
     priceRange: { min: null, max: null },
     hasAsin: null,
@@ -88,10 +92,38 @@ export function useProductTable(category: string, shopName: string, initialProdu
       );
     }
 
+    // 危険物を除くフィルター
+    if (filters.excludeDangerousGoods) {
+      filtered = filtered.filter(product => 
+        !product.asins?.some(asin => asin.isDangerousGoods)
+      );
+    }
+
     // パートナーキャリア不可フィルター
     if (filters.showPartnerCarrierUnavailable) {
       filtered = filtered.filter(product => 
         product.asins?.some(asin => asin.isPartnerCarrierUnavailable)
+      );
+    }
+
+    // パートナーキャリア不可を除くフィルター
+    if (filters.excludePartnerCarrierUnavailable) {
+      filtered = filtered.filter(product => 
+        !product.asins?.some(asin => asin.isPartnerCarrierUnavailable)
+      );
+    }
+
+    // 公式を除くフィルター（チェックついているものを除く）
+    if (filters.excludeOfficialStore) {
+      filtered = filtered.filter(product => 
+        !product.asins?.some(asin => asin.hasOfficialStore)
+      );
+    }
+
+    // Amazonを除くフィルター（チェックついているものを除く）
+    if (filters.excludeAmazonStore) {
+      filtered = filtered.filter(product => 
+        !product.asins?.some(asin => asin.hasAmazonStore)
       );
     }
 

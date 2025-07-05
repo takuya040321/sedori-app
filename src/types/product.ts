@@ -107,7 +107,11 @@ export interface FilterSettings {
   search: string;
   showHiddenOnly: boolean; // 非表示商品のみを表示
   showDangerousGoods: boolean;
+  excludeDangerousGoods: boolean; // 危険物を除く
   showPartnerCarrierUnavailable: boolean;
+  excludePartnerCarrierUnavailable: boolean; // パートナーキャリア不可を除く
+  excludeOfficialStore: boolean; // 公式を除く（チェックついているものを除く）
+  excludeAmazonStore: boolean; // Amazonを除く（チェックついているものを除く）
   showProfitableOnly: boolean; // 利益商品のみ表示
   priceRange: {
     min: number | null;

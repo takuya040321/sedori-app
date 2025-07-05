@@ -44,7 +44,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
       search: '',
       showHiddenOnly: false,
       showDangerousGoods: false,
+      excludeDangerousGoods: false,
       showPartnerCarrierUnavailable: false,
+      excludePartnerCarrierUnavailable: false,
+      excludeOfficialStore: false,
+      excludeAmazonStore: false,
       showProfitableOnly: false,
       priceRange: { min: null, max: null },
       hasAsin: null,
@@ -55,7 +59,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     filters.search !== '' ||
     filters.showHiddenOnly ||
     filters.showDangerousGoods ||
+    filters.excludeDangerousGoods ||
     filters.showPartnerCarrierUnavailable ||
+    filters.excludePartnerCarrierUnavailable ||
+    filters.excludeOfficialStore ||
+    filters.excludeAmazonStore ||
     filters.showProfitableOnly ||
     filters.priceRange.min !== null ||
     filters.priceRange.max !== null ||
@@ -105,7 +113,147 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             className="space-y-4 border-t pt-4"
           >
             {/* チェックボックスフィルター */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-4">
+              {/* 基本フィルター */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">基本フィルター</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.showHiddenOnly}
+                      onChange={(e) => updateFilter('showHiddenOnly', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm">非表示商品のみを表示</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.showProfitableOnly}
+                      onChange={(e) => updateFilter('showProfitableOnly', e.target.checked)}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <span className="text-sm">利益商品のみ表示</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 危険物フィルター */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">危険物フィルター</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.showDangerousGoods}
+                      onChange={(e) => updateFilter('showDangerousGoods', e.target.checked)}
+                      className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                    />
+                    <span className="text-sm">危険物のみ表示</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.excludeDangerousGoods}
+                      onChange={(e) => updateFilter('excludeDangerousGoods', e.target.checked)}
+                      className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                    />
+                    <span className="text-sm">危険物を除く</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* パートナーキャリアフィルター */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">パートナーキャリアフィルター</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.showPartnerCarrierUnavailable}
+                      onChange={(e) => updateFilter('showPartnerCarrierUnavailable', e.target.checked)}
+                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <span className="text-sm">パートナーキャリア不可のみ</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.excludePartnerCarrierUnavailable}
+                      onChange={(e) => updateFilter('excludePartnerCarrierUnavailable', e.target.checked)}
+                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <span className="text-sm">パートナーキャリア不可を除く</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* ストアフィルター */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">ストアフィルター</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.excludeOfficialStore}
+                      onChange={(e) => updateFilter('excludeOfficialStore', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm">公式を除く</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.excludeAmazonStore}
+                      onChange={(e) => updateFilter('excludeAmazonStore', e.target.checked)}
+                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    />
+                    <span className="text-sm">Amazonを除く</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* 旧フィルター（削除） */}
+            <div className="hidden">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.showDangerousGoods}
+                  onChange={(e) => updateFilter('showDangerousGoods', e.target.checked)}
+                  className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                />
+                <span className="text-sm">危険物のみ表示</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.showPartnerCarrierUnavailable}
+                  onChange={(e) => updateFilter('showPartnerCarrierUnavailable', e.target.checked)}
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <span className="text-sm">パートナーキャリア不可のみ</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.showProfitableOnly}
+                  onChange={(e) => updateFilter('showProfitableOnly', e.target.checked)}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="text-sm">利益商品のみ表示</span>
+              </label>
+            </div>
+
+            {/* 旧フィルター（削除） */}
+            <div className="hidden">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -113,7 +261,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                   onChange={(e) => updateFilter('showHiddenOnly', e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm">非表示商品のみを表示</span>
+                <span className="text-sm">非表示商品を表示</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
