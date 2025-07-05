@@ -86,7 +86,9 @@
           "jan": [
             "4511413530986"
           ],
-          "note": ""
+          "note": "",
+          "hasAmazonStore": true,
+          "hasOfficialStore": true
         }
       ]
     },

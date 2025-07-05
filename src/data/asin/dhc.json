@@ -1,5 +1,5 @@
 [
-{
+  {
     "asin": "B09LQLTM4L",
     "url": "https://www.amazon.co.jp/dp/B09LQLTM4L?psc=1",
     "productName": "DHC エクストラモイスチュアリップクリーム",
@@ -2898,7 +2898,9 @@
     "jan": [
       "4511413530986"
     ],
-    "note": ""
+    "note": "",
+    "hasAmazonStore": true,
+    "hasOfficialStore": true
   },
   {
     "asin": "B0DB1H5CVF",
@@ -20185,8 +20187,8 @@
   {
     "asin": "B00W2UURRM",
     "url": "https://www.amazon.co.jp/dp/B00W2UURRM",
-    "productName": "健康食品 健康値が気になる方 便利 ＤＨＣ ガルニシアエキス ２０日分 １００粒【2個セット】",
-    "brand": "DHC(ディー・エイチ・シー)",
+    "productName": "健康食品 健康値が気になる方 便利 ＤＨＣ ガルニシアエキス ２０日分 １００粒【2個セッ��】",
+    "brand": "DHC(デ��ー・エイチ・シー)",
     "price": 0,
     "soldUnit": 0,
     "sellingFee": null,
