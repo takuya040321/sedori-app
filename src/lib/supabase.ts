@@ -1,8 +1,13 @@
 // src/lib/supabase.ts
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-anon-key-for-development';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy-project.supabase.co";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-anon-key-for-development";
+
+// 環境変数が設定されていない場合の警告
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  console.warn("Supabase environment variables not configured. Using dummy values for development.");
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -160,6 +165,5 @@ export interface Database {
         };
       };
     };
-  }
-  console.warn('Supabase environment variables not configured. Using dummy values for development.');
+  };
 }
