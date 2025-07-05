@@ -2,17 +2,24 @@
 import { ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calcProfit, calcProfitMargin, calcROI } from "./calc";
 
+// shouldCalculateUnitPrice関数をエクスポート
+export { shouldCalculateUnitPrice } from "./pricing-calculator";
+
 // 商品名から個数を検出する関数
 export function extractUnitCount(productName: string): { count: number; unitType: string } {
   // 正規表現で数字 + 単位を検出
   const patterns = [
-    { regex: /(\d+)本/g, unit: "本" },
-    { regex: /(\d+)個/g, unit: "個" },
-    { regex: /(\d+)セット/g, unit: "セット" },
-    { regex: /(\d+)袋/g, unit: "袋" },
-    { regex: /(\d+)包/g, unit: "包" },
-    { regex: /(\d+)粒/g, unit: "粒" },
-    { regex: /(\d+)錠/g, unit: "錠" },
+    { regex: /(\d+)本/gi, unit: "本" },
+    { regex: /(\d+)個/gi, unit: "個" },
+    { regex: /(\d+)セット/gi, unit: "セット" },
+    { regex: /(\d+)袋/gi, unit: "袋" },
+    { regex: /(\d+)包/gi, unit: "包" },
+    { regex: /(\d+)粒/gi, unit: "粒" },
+    { regex: /(\d+)錠/gi, unit: "錠" },
+    { regex: /［(\d+)個入］/gi, unit: "個" },
+    { regex: /\[(\d+)個入\]/gi, unit: "個" },
+    { regex: /（(\d+)個入）/gi, unit: "個" },
+    { regex: /\((\d+)個入\)/gi, unit: "個" },
   ];
 
   for (const pattern of patterns) {
@@ -21,13 +28,40 @@ export function extractUnitCount(productName: string): { count: number; unitType
       // 最後にマッチした数字を使用（例：「2本+1本プレゼント」の場合は「1本」を優先）
       const lastMatch = matches[matches.length - 1];
       const count = parseInt(lastMatch[1], 10);
-      if (count > 1) {
-        return { count, unitType: pattern.unit };
-      }
+      return { count, unitType: pattern.unit };
     }
   }
 
   return { count: 1, unitType: "個" };
+}
+
+// 商品名とAmazon商品名の個数を比較して価格調整が必要かを判定
+export function shouldCalculateUnitPrice(
+  productName: string, 
+  amazonProductName: string
+): { shouldCalculate: boolean; productCount: number; amazonCount: number; unitType: string } {
+  const productInfo = extractUnitCount(productName);
+  const amazonInfo = extractUnitCount(amazonProductName);
+  
+  // Amazon商品名が空の場合は商品名の個数情報を使用
+  if (!amazonProductName || amazonProductName.trim() === "") {
+    return {
+      shouldCalculate: productInfo.count > 1,
+      productCount: productInfo.count,
+      amazonCount: 1,
+      unitType: productInfo.unitType
+    };
+  }
+  
+  // 個数が異なる場合は1個あたり価格を計算
+  const shouldCalculate = productInfo.count !== amazonInfo.count && productInfo.count > 1;
+  
+  return {
+    shouldCalculate,
+    productCount: productInfo.count,
+    amazonCount: amazonInfo.count,
+    unitType: productInfo.unitType
+  };
 }
 
 // 実際の仕入れ価格を計算（1個あたり対応）
@@ -36,21 +70,22 @@ export function calculateActualCost(
   salePrice: number | undefined,
   config: ShopPricingConfig,
   userDiscountSettings: UserDiscountSettings = {},
-  productName?: string
+  productName?: string,
+  amazonProductName?: string
 ): number {
-  // DHCの場合、1個あたり価格を優先的に使用
+  // DHCの場合、商品名とAmazon商品名を比較して価格調整
   let basePrice = originalPrice;
   if (config.shopName === 'dhc' && productName) {
-    const { count } = extractUnitCount(productName);
-    if (count > 1) {
-      // 複数個商品の場合、1個あたり価格を基準にする
+    const priceInfo = shouldCalculateUnitPrice(productName, amazonProductName || "");
+    if (priceInfo.shouldCalculate) {
+      // 個数が異なる場合、1個あたり価格を基準にする
       if (salePrice) {
-        basePrice = salePrice / count;
+        basePrice = salePrice / priceInfo.productCount;
       } else {
-        basePrice = originalPrice / count;
+        basePrice = originalPrice / priceInfo.productCount;
       }
     } else {
-      // 単品の場合は従来通り（セール価格 > 通常価格）
+      // 個数が同じ場合は従来通り（セール価格 > 通常価格）
       basePrice = salePrice || originalPrice;
     }
   } else {
@@ -112,9 +147,10 @@ export function calculateProfitWithShopPricing(
   fbaFee: number,
   config: ShopPricingConfig,
   userDiscountSettings: UserDiscountSettings = {},
-  productName?: string
+  productName?: string,
+  amazonProductName?: string
 ): ProfitCalculationResult {
-  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings, productName);
+  const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings, productName, amazonProductName);
   
   // 利益計算
   const profit = Math.round(calcProfit(amazonPrice, sellingFee, fbaFee, actualCost));
@@ -124,9 +160,9 @@ export function calculateProfitWithShopPricing(
   // 割引情報
   let basePrice = originalPrice;
   if (config.shopName === 'dhc' && productName) {
-    const { count } = extractUnitCount(productName);
-    if (count > 1) {
-      basePrice = (salePrice || originalPrice) / count;
+    const priceInfo = shouldCalculateUnitPrice(productName, amazonProductName || "");
+    if (priceInfo.shouldCalculate) {
+      basePrice = (salePrice || originalPrice) / priceInfo.productCount;
     } else {
       basePrice = salePrice || originalPrice;
     }
@@ -188,9 +224,9 @@ export function getDiscountDisplayText(
   // DHCの場合、単位情報を取得
   let unitSuffix = "";
   if (config.shopName === 'dhc' && productName) {
-    const { count, unitType } = extractUnitCount(productName);
-    if (count > 1) {
-      unitSuffix = ` (1${unitType}あたり)`;
+    const priceInfo = shouldCalculateUnitPrice(productName, "");
+    if (priceInfo.shouldCalculate) {
+      unitSuffix = ` (1${priceInfo.unitType}あたり)`;
     }
   }
   
@@ -221,9 +257,9 @@ export function getDiscountDisplayText(
       }
       
       if (userDiscountRate > 0) {
-        return `${basePrice.toLocaleString()}円 × ${100 - totalDiscountRate}% (基本${baseDiscountRate}% + 追加${userDiscountRate}%) = ${actualCost.toLocaleString()}円${unitSuffix}`;
+        return `${basePrice.toLocaleString()}円 (基本${baseDiscountRate}% + 追加${userDiscountRate}%) = ${actualCost.toLocaleString()}円${unitSuffix}`;
       } else {
-        return `${basePrice.toLocaleString()}円 × ${100 - baseDiscountRate}% = ${actualCost.toLocaleString()}円${unitSuffix}`;
+        return `${basePrice.toLocaleString()}円 (${baseDiscountRate}%) = ${actualCost.toLocaleString()}円${unitSuffix}`;
       }
       
     default:

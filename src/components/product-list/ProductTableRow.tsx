@@ -2,7 +2,7 @@
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
-import { calculateActualCost, calculateProfitWithShopPricing, extractUnitCount } from "@/lib/pricing-calculator";
+import { calculateActualCost, calculateProfitWithShopPricing, shouldCalculateUnitPrice } from "@/lib/pricing-calculator";
 import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -194,7 +194,8 @@ export const ProductTableRow: React.FC<Props> = ({
       product.salePrice,
       shopPricingConfig,
       userDiscountSettings,
-      product.name // 商品名を渡して個数検出
+      product.name, // 商品名を渡して個数検出
+      asinInfo?.productName // Amazon商品名も渡す
     );
 
 
@@ -254,9 +255,9 @@ export const ProductTableRow: React.FC<Props> = ({
   const getPriceDisplay = () => {
     // DHCの場合、複数個商品の1個あたり価格を表示
     if (shopPricingConfig?.shopName === 'dhc') {
-      const { count, unitType } = extractUnitCount(product.name);
-      if (count > 1) {
-        const unitPrice = (product.salePrice || product.price) / count;
+      const priceInfo = shouldCalculateUnitPrice(product.name, asinInfo?.productName || "");
+      if (priceInfo.shouldCalculate) {
+        const unitPrice = (product.salePrice || product.price) / priceInfo.productCount;
         
         if (product.salePrice) {
           return (
@@ -268,7 +269,7 @@ export const ProductTableRow: React.FC<Props> = ({
                 {product.salePrice.toLocaleString()}円
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {Math.round(unitPrice).toLocaleString()}円/1{unitType}
+                {Math.round(unitPrice).toLocaleString()}円/1{priceInfo.unitType}
               </div>
             </div>
           );
@@ -279,7 +280,7 @@ export const ProductTableRow: React.FC<Props> = ({
                 {product.price.toLocaleString()}円
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {Math.round(unitPrice).toLocaleString()}円/1{unitType}
+                {Math.round(unitPrice).toLocaleString()}円/1{priceInfo.unitType}
               </div>
             </div>
           );
@@ -320,7 +321,8 @@ export const ProductTableRow: React.FC<Props> = ({
       asinInfo.fbaFee,
       shopPricingConfig,
       userDiscountSettings,
-      product.name // 商品名を渡して個数検出
+      product.name, // 商品名を渡して個数検出
+      asinInfo?.productName // Amazon商品名も渡す
     );
 
     return {

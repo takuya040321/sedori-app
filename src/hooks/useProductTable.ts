@@ -52,7 +52,8 @@ export function useProductTable(category: string, shopName: string, initialProdu
       asinInfo.fbaFee,
       shopPricingConfig,
       userDiscountSettings,
-      product.name
+      product.name,
+      asinInfo.productName
     );
 
     return {
