@@ -4,7 +4,6 @@
 import React, { useRef } from "react";
 import { ProductTable } from "@/components/product-list/ProductTable";
 import { ScrapingButton } from "@/components/product-list/ScrapingButton";
-import { ProxyStatusIndicator } from "@/components/product-list/ProxyStatusIndicator";
 import { PageContainer } from "@/components/layout/PageContainer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -57,9 +56,6 @@ export default function ShopPageClient({ category, shopName, shopData }: ShopPag
             </div>
           </div>
         </div>
-
-        {/* プロキシ状態表示 */}
-        <ProxyStatusIndicator />
 
         {/* 商品テーブル */}
         <ProductTable

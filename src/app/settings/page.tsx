@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Save, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useTableDisplaySettings } from "@/hooks/useTableDisplaySettings";
+import { ProxyStatusIndicator } from "@/components/product-list/ProxyStatusIndicator";
 
 export default function SettingsPage() {
   const {
@@ -60,6 +61,9 @@ export default function SettingsPage() {
             <h1 className="text-4xl font-bold text-gradient">設定</h1>
             <p className="text-lg text-gray-600">テーブル表示設定を管理できます</p>
           </div>
+
+          {/* プロキシ接続確認 */}
+          <ProxyStatusIndicator />
 
           {/* テーブル表示設定 */}
           <Card>
