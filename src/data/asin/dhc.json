@@ -2900,7 +2900,8 @@
     ],
     "note": "",
     "hasAmazonStore": false,
-    "hasOfficialStore": false
+    "hasOfficialStore": false,
+    "isPartnerCarrierUnavailable": true
   },
   {
     "asin": "B0DB1H5CVF",
