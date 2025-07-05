@@ -51,22 +51,7 @@
       "imageUrl": "https://www.dhc.co.jp/goods/22262/summary.jpg",
       "price": 1634,
       "updatedAt": "2025-07-04T03:09:08.419Z",
-      "asins": [
-        {
-          "asin": "B0D251ZBXL",
-          "url": "https://amazon.co.jp/dp/B0D251ZBXL",
-          "productName": "",
-          "brand": "dhc",
-          "price": 0,
-          "soldUnit": 0,
-          "sellingFee": null,
-          "fbaFee": null,
-          "jan": [],
-          "note": "手動入力が必要",
-          "isDangerousGoods": false,
-          "isPartnerCarrierUnavailable": false
-        }
-      ]
+      "asins": []
     },
     {
       "name": "DHCディープ クレンジング バーム",
