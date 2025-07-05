@@ -79,6 +79,11 @@ export function useTableDisplaySettings() {
 
   // 保存された設定を取得（商品一覧ページで使用）
   const getSavedSettings = (): FilterSettings => {
+    // SSR環境ではlocalStorageが利用できないため、クライアントサイドでのみ実行
+    if (typeof window === "undefined") {
+      return DEFAULT_SETTINGS;
+    }
+    
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
