@@ -78,7 +78,28 @@ export interface UserDiscountSettings {
 }
 
 // 並び替え設定
-export type SortField = 'name' | 'price' | 'salePrice' | 'updatedAt' | 'memo';
+export type SortField = 
+  | 'name' 
+  | 'price' 
+  | 'salePrice' 
+  | 'updatedAt' 
+  | 'memo'
+  | 'purchasePrice'
+  | 'asin'
+  | 'amazonProductName'
+  | 'amazonPrice'
+  | 'soldUnit'
+  | 'sellingFee'
+  | 'fbaFee'
+  | 'profit'
+  | 'profitMargin'
+  | 'roi'
+  | 'isDangerousGoods'
+  | 'isPartnerCarrierUnavailable'
+  | 'hasOfficialStore'
+  | 'hasAmazonStore'
+  | 'complaintCount'
+  | 'hidden';
 export type SortDirection = 'asc' | 'desc';
 
 // フィルタリング設定

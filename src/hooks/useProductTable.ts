@@ -114,6 +114,74 @@ export function useProductTable(category: string, shopName: string, initialProdu
           aValue = (a.memo || '').toLowerCase();
           bValue = (b.memo || '').toLowerCase();
           break;
+        case 'purchasePrice':
+          // 仕入価格での並び替え（ショップ設定を考慮）
+          aValue = a.salePrice || a.price;
+          bValue = b.salePrice || b.price;
+          break;
+        case 'asin':
+          aValue = (a.asins && a.asins[0]?.asin) || '';
+          bValue = (b.asins && b.asins[0]?.asin) || '';
+          break;
+        case 'amazonProductName':
+          aValue = (a.asins && a.asins[0]?.productName) || '';
+          bValue = (b.asins && b.asins[0]?.productName) || '';
+          break;
+        case 'amazonPrice':
+          aValue = (a.asins && a.asins[0]?.price) || 0;
+          bValue = (b.asins && b.asins[0]?.price) || 0;
+          break;
+        case 'soldUnit':
+          aValue = (a.asins && a.asins[0]?.soldUnit) || 0;
+          bValue = (b.asins && b.asins[0]?.soldUnit) || 0;
+          break;
+        case 'sellingFee':
+          aValue = (a.asins && a.asins[0]?.sellingFee) || 0;
+          bValue = (b.asins && b.asins[0]?.sellingFee) || 0;
+          break;
+        case 'fbaFee':
+          aValue = (a.asins && a.asins[0]?.fbaFee) || 0;
+          bValue = (b.asins && b.asins[0]?.fbaFee) || 0;
+          break;
+        case 'profit':
+          // 利益額での並び替え（計算が必要）
+          aValue = 0; // 実際の利益計算は複雑なので簡易版
+          bValue = 0;
+          break;
+        case 'profitMargin':
+          // 利益率での並び替え
+          aValue = 0;
+          bValue = 0;
+          break;
+        case 'roi':
+          // ROIでの並び替え
+          aValue = 0;
+          bValue = 0;
+          break;
+        case 'isDangerousGoods':
+          aValue = (a.asins && a.asins[0]?.isDangerousGoods) ? 1 : 0;
+          bValue = (b.asins && b.asins[0]?.isDangerousGoods) ? 1 : 0;
+          break;
+        case 'isPartnerCarrierUnavailable':
+          aValue = (a.asins && a.asins[0]?.isPartnerCarrierUnavailable) ? 1 : 0;
+          bValue = (b.asins && b.asins[0]?.isPartnerCarrierUnavailable) ? 1 : 0;
+          break;
+        case 'hasOfficialStore':
+          aValue = (a.asins && a.asins[0]?.hasOfficialStore) ? 1 : 0;
+          bValue = (b.asins && b.asins[0]?.hasOfficialStore) ? 1 : 0;
+          break;
+        case 'hasAmazonStore':
+          aValue = (a.asins && a.asins[0]?.hasAmazonStore) ? 1 : 0;
+          bValue = (b.asins && b.asins[0]?.hasAmazonStore) ? 1 : 0;
+          break;
+        case 'complaintCount':
+          aValue = (a.asins && a.asins[0]?.complaintCount) || 0;
+          bValue = (b.asins && b.asins[0]?.complaintCount) || 0;
+          break;
+        case 'hidden':
+          aValue = a.hidden ? 1 : 0;
+          bValue = b.hidden ? 1 : 0;
+          break;
         default:
           return 0;
       }

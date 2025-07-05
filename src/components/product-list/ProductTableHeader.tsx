@@ -36,40 +36,67 @@ export const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({
     </th>
   );
 
-  const ResizableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
-    <th className={`resize-x overflow-hidden ${className}`} style={{ minWidth: '80px' }}>
-      <div className="flex items-center justify-center">
-        {children}
-      </div>
-    </th>
-  );
 
   return (
     <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
       <tr>
-        <ResizableHeader className="w-20">画像</ResizableHeader>
+        <SortableHeader field="name" className="w-20">
+          <span>画像</span>
+        </SortableHeader>
         <SortableHeader field="name" className="min-w-[200px]">
           <span>商品名</span>
         </SortableHeader>
         <SortableHeader field="price" className="w-24">
           <span>価格</span>
         </SortableHeader>
-        <ResizableHeader className="w-32">仕入価格</ResizableHeader>
-        <ResizableHeader className="w-32">ASIN</ResizableHeader>
-        <ResizableHeader className="w-60">Amazon商品名</ResizableHeader>
-        <ResizableHeader className="w-24">Amazon価格</ResizableHeader>
-        <ResizableHeader className="w-20">月販数</ResizableHeader>
-        <ResizableHeader className="w-20">手数料</ResizableHeader>
-        <ResizableHeader className="w-20">FBA料</ResizableHeader>
-        <ResizableHeader className="w-24">利益額</ResizableHeader>
-        <ResizableHeader className="w-20">利益率</ResizableHeader>
-        <ResizableHeader className="w-20">ROI</ResizableHeader>
-        <ResizableHeader className="w-16">危険物</ResizableHeader>
-        <ResizableHeader className="w-16">ﾊﾟｰｷｬﾘ</ResizableHeader>
-        <ResizableHeader className="w-16">公式有無</ResizableHeader>
-        <ResizableHeader className="w-16">Amazon有無</ResizableHeader>
-        <ResizableHeader className="w-16">苦情回数</ResizableHeader>
-        <ResizableHeader className="w-16">非表示</ResizableHeader>
+        <SortableHeader field="purchasePrice" className="w-32">
+          <span>仕入価格</span>
+        </SortableHeader>
+        <SortableHeader field="asin" className="w-32">
+          <span>ASIN</span>
+        </SortableHeader>
+        <SortableHeader field="amazonProductName" className="w-60">
+          <span>Amazon商品名</span>
+        </SortableHeader>
+        <SortableHeader field="amazonPrice" className="w-24">
+          <span>Amazon価格</span>
+        </SortableHeader>
+        <SortableHeader field="soldUnit" className="w-20">
+          <span>月販数</span>
+        </SortableHeader>
+        <SortableHeader field="sellingFee" className="w-20">
+          <span>手数料</span>
+        </SortableHeader>
+        <SortableHeader field="fbaFee" className="w-20">
+          <span>FBA料</span>
+        </SortableHeader>
+        <SortableHeader field="profit" className="w-24">
+          <span>利益額</span>
+        </SortableHeader>
+        <SortableHeader field="profitMargin" className="w-20">
+          <span>利益率</span>
+        </SortableHeader>
+        <SortableHeader field="roi" className="w-20">
+          <span>ROI</span>
+        </SortableHeader>
+        <SortableHeader field="isDangerousGoods" className="w-16">
+          <span>危険物</span>
+        </SortableHeader>
+        <SortableHeader field="isPartnerCarrierUnavailable" className="w-16">
+          <span>ﾊﾟｰｷｬﾘ</span>
+        </SortableHeader>
+        <SortableHeader field="hasOfficialStore" className="w-16">
+          <span>公式有無</span>
+        </SortableHeader>
+        <SortableHeader field="hasAmazonStore" className="w-16">
+          <span>Amazon有無</span>
+        </SortableHeader>
+        <SortableHeader field="complaintCount" className="w-16">
+          <span>苦情回数</span>
+        </SortableHeader>
+        <SortableHeader field="hidden" className="w-16">
+          <span>非表示</span>
+        </SortableHeader>
         <SortableHeader field="memo" className="w-32">
           <span>メモ</span>
         </SortableHeader>
