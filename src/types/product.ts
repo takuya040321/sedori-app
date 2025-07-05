@@ -108,6 +108,7 @@ export interface FilterSettings {
   showHidden: boolean;
   showDangerousGoods: boolean;
   showPartnerCarrierUnavailable: boolean;
+  showProfitableOnly: boolean; // 利益商品のみ表示
   priceRange: {
     min: number | null;
     max: number | null;

@@ -25,6 +25,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
     showHidden: false,
     showDangerousGoods: false,
     showPartnerCarrierUnavailable: false,
+    showProfitableOnly: false,
     priceRange: { min: null, max: null },
     hasAsin: null,
   });
@@ -92,6 +93,35 @@ export function useProductTable(category: string, shopName: string, initialProdu
       filtered = filtered.filter(product => 
         product.asins?.some(asin => asin.isPartnerCarrierUnavailable)
       );
+    }
+
+    // 利益商品のみフィルター
+    if (filters.showProfitableOnly) {
+      filtered = filtered.filter(product => {
+        if (!product.asins || product.asins.length === 0 || !shopPricingConfig) {
+          return false;
+        }
+        
+        const asinInfo = product.asins[0]; // 最初のASINで判定
+        if (!asinInfo || asinInfo.price === 0 || 
+            asinInfo.sellingFee === null || asinInfo.fbaFee === null) {
+          return false;
+        }
+
+        const profitResult = calculateProfitWithShopPricing(
+          product.price,
+          product.salePrice,
+          asinInfo.price,
+          asinInfo.sellingFee,
+          asinInfo.fbaFee,
+          shopPricingConfig,
+          {},
+          product.name,
+          asinInfo.productName
+        );
+
+        return profitResult.profitMargin > 0; // 利益率がプラスの商品のみ
+      });
     }
 
     // 価格範囲フィルター

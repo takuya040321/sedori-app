@@ -195,10 +195,10 @@
   cursor: help;
 }
 
-/* 20文字制限の表示 */
+/* 40文字制限の表示 */
 .truncate-20 {
   display: inline-block;
-  max-width: 20ch;
+  max-width: 40ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -45,6 +45,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
       showHidden: false,
       showDangerousGoods: false,
       showPartnerCarrierUnavailable: false,
+      showProfitableOnly: false,
       priceRange: { min: null, max: null },
       hasAsin: null,
     });
@@ -55,6 +56,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     filters.showHidden ||
     filters.showDangerousGoods ||
     filters.showPartnerCarrierUnavailable ||
+    filters.showProfitableOnly ||
     filters.priceRange.min !== null ||
     filters.priceRange.max !== null ||
     filters.hasAsin !== null;
@@ -132,6 +134,16 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
                   className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
                 <span className="text-sm">パートナーキャリア不可のみ</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.showProfitableOnly}
+                  onChange={(e) => updateFilter('showProfitableOnly', e.target.checked)}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <span className="text-sm">利益商品のみ表示</span>
               </label>
             </div>
 

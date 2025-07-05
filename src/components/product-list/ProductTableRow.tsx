@@ -161,7 +161,7 @@ export const ProductTableRow: React.FC<Props> = ({
     );
   };
   // 文字列を20文字で切り詰める関数
-  const truncateText = (text: string, maxLength: number = 20): string => {
+  const truncateText = (text: string, maxLength: number = 40): string => {
     if (!text) return "";
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
@@ -435,7 +435,7 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="product-name-cell" title={product.name}>
             <div className="text-xs leading-tight">
               <span className="truncate-20">
-                {truncateText(product.name, 20)}
+                {truncateText(product.name, 40)}
               </span>
             </div>
           </div>
@@ -511,7 +511,7 @@ export const ProductTableRow: React.FC<Props> = ({
             >
               <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
                 <span className="truncate-20">
-                  {truncateText(asinInfo.productName, 20)}
+                  {truncateText(asinInfo.productName, 40)}
                 </span>
                 <ExternalLink className="w-2 h-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
@@ -531,7 +531,7 @@ export const ProductTableRow: React.FC<Props> = ({
       <td className="px-2 py-1 text-center w-20">
         {asinInfo ? (
           asinIndex !== undefined ? (
-            renderEditableField("price", asinInfo.price, "0", "円")
+            renderEditableField("price", asinInfo.price, "0", "")
           ) : (
             <span className="text-gray-400 text-xs">-</span>
           )
@@ -570,7 +570,7 @@ export const ProductTableRow: React.FC<Props> = ({
       <td className="px-2 py-1 text-center w-16">
         {asinInfo ? (
           asinIndex !== undefined ? (
-            renderEditableField("fbaFee", asinInfo.fbaFee, "300", "円")
+            renderEditableField("fbaFee", asinInfo.fbaFee, "300", "")
           ) : (
             <span className="text-gray-400 text-xs">-</span>
           )
@@ -585,7 +585,7 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className={`font-medium text-xs ${
             profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
           }`}>
-            {Math.round(profitInfo.profit).toLocaleString()}円
+            {Math.round(profitInfo.profit).toLocaleString()}
           </div>
         ) : (
           <span className="text-gray-400 text-xs">-</span>
