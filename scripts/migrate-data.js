@@ -53,8 +53,18 @@ async function testDatabaseConnection() {
       .limit(1);
     
     if (error) {
-      console.error('❌ データベース接続エラー:', error);
-      throw new Error('データベースに接続できません。マイグレーションが実行されているか確認してください。');
+      if (error.code === '42P01') {
+        console.error('❌ テーブルが存在しません:', error.message);
+        console.log('\n📋 解決方法:');
+        console.log('1. 以下のコマンドでマイグレーション実行スクリプトを起動:');
+        console.log('   npm run run-migrations');
+        console.log('2. 表示される手順に従ってSupabaseダッシュボードでマイグレーションを実行');
+        console.log('3. マイグレーション完了後、再度このスクリプトを実行');
+        throw new Error('データベーススキーマが作成されていません。上記の手順に従ってマイグレーションを実行してください。');
+      } else {
+        console.error('❌ データベース接続エラー:', error);
+        throw new Error('データベースに接続できません。環境変数とネットワーク接続を確認してください。');
+      }
     }
     
     console.log('✅ データベース接続成功');

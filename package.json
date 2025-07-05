@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate-data": "node scripts/migrate-data.js"
+    "run-migrations": "node scripts/run-migrations.js",
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
