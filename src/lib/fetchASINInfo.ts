@@ -23,6 +23,7 @@ export const fetchASINInfo = async (asin: string, brand: string): Promise<AsinIn
         isPartnerCarrierUnavailable: false,
         hasOfficialStore: false,
         hasAmazonStore: false,
+        complaintCount: 0,
       };
     }
     

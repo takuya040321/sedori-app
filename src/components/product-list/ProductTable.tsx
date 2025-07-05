@@ -254,13 +254,16 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
               • <strong>画像ホバー</strong>: 商品画像にマウスを合わせると拡大表示されます
             </p>
             <p>
-              • <strong>新規フィールド</strong>: 公式有無、Amazon有無を追加（チェックボックスで編集可能）
+              • <strong>新規フィールド</strong>: 公式有無、Amazon有無、苦情回数を追加（チェックボックス・数値編集可能）
             </p>
             {shopName === 'dhc' && (
               <p>
                 • <strong>1個あたり表示</strong>: DHCの複数個商品は価格列に1個あたり価格を表示し、その価格で利益計算
               </p>
             )}
+            <p>
+              • <strong>数値表示</strong>: 月販数・苦情回数は0の場合「-」で表示、1以上は数値のみ表示
+            </p>
           </div>
         </div>
       </div>
