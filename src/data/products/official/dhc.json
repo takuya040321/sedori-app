@@ -1457,7 +1457,21 @@
       "name": "DHC薬用メラノレジストローション",
       "imageUrl": "https://www.dhc.co.jp/goods/23484/summary.jpg",
       "price": 4400,
-      "updatedAt": "2025-07-04T03:09:10.986Z"
+      "updatedAt": "2025-07-04T03:09:10.986Z",
+      "asins": [
+        {
+          "asin": "B087WMHSFJ",
+          "url": "https://www.amazon.co.jp/dp/B087WMHSFJ",
+          "productName": "DHC薬用メラノレジストローション",
+          "brand": "DHC",
+          "price": 3940,
+          "soldUnit": 0,
+          "sellingFee": 10,
+          "fbaFee": 434,
+          "jan": [],
+          "note": ""
+        }
+      ]
     },
     {
       "name": "DHC薬用エイジアホワイト ローション",
