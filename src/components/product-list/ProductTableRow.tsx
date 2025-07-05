@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateActualCost, calculateProfitWithShopPricing, shouldCalculateUnitPrice } from "@/lib/pricing-calculator";
-import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink, Check, X } from "lucide-react";
+import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink, Check, X, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,7 @@ interface Props {
   onDangerousGoodsChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   onPartnerCarrierChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   onAsinInfoUpdate: (_rowIndex: number, _asinIndex: number, _field: keyof AsinInfo, _value: any) => void;
+  onProductDuplicate: (_rowIndex: number) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
   isLoadingAsins?: boolean;
@@ -39,6 +40,7 @@ export const ProductTableRow: React.FC<Props> = ({
   onDangerousGoodsChange,
   onPartnerCarrierChange,
   onAsinInfoUpdate,
+  onProductDuplicate,
   shopPricingConfig,
   userDiscountSettings = {},
   isLoadingAsins = false,
@@ -433,7 +435,7 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 2. 商品名 - 最初の行のみ表示 */}
       <td className="px-2 py-1 w-48 relative group cursor-default">
         {isFirstAsinRow ? (
-          <>
+          <div className="flex items-center gap-2">
             <div 
               className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-xs leading-tight" 
               title={product.name}
@@ -446,9 +448,22 @@ export const ProductTableRow: React.FC<Props> = ({
                 {product.name}
               </div>
             )}
-          </>
+            {/* 商品複製ボタン */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onProductDuplicate(rowIndex)}
+              className="h-5 w-5 p-0 text-blue-500 hover:text-blue-700 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="この商品を複製して追加ASINを登録"
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+          </div>
         ) : (
-          <div className="text-gray-400 text-xs italic">↳ 追加</div>
+          <div className="text-gray-400 text-xs italic flex items-center gap-1">
+            <Copy className="w-3 h-3" />
+            複製商品
+          </div>
         )}
       </td>
       

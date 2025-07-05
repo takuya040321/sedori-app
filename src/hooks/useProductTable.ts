@@ -339,6 +339,38 @@ export function useProductTable(category: string, shopName: string, initialProdu
     });
   };
 
+  // 商品複製処理
+  const handleProductDuplicate = async (_rowIndex: number) => {
+    try {
+      const originalProduct = allProducts[_rowIndex];
+      if (!originalProduct) return;
+
+      // 複製商品を作成（ASINは空にする）
+      const duplicatedProduct: Product = {
+        ...originalProduct,
+        asins: undefined, // ASINをクリア
+        updatedAt: new Date().toISOString(),
+        memo: originalProduct.memo ? `${originalProduct.memo} (複製)` : "(複製)",
+      };
+
+      // 商品配列に追加
+      const updatedProducts = [...allProducts];
+      updatedProducts.splice(_rowIndex + 1, 0, duplicatedProduct);
+
+      // バックエンドに保存
+      await fetch(`/api/products/${category}/${shopName}/duplicate-product`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: _rowIndex, duplicatedProduct }),
+      });
+
+      // データを再取得
+      mutate();
+    } catch (error) {
+      console.error("Failed to duplicate product:", error);
+    }
+  };
+
   // メモ更新処理
   const handleMemoChange = async (_rowIndex: number, memo: string) => {
     try {
@@ -553,5 +585,6 @@ export function useProductTable(category: string, shopName: string, initialProdu
     handleDangerousGoodsChange,
     handlePartnerCarrierChange,
     handleAsinInfoUpdate,
+    handleProductDuplicate,
   };
 }

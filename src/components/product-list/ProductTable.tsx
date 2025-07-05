@@ -168,6 +168,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                     onDangerousGoodsChange={handleDangerousGoodsChange}
                     onPartnerCarrierChange={handlePartnerCarrierChange}
                     onAsinInfoUpdate={handleAsinInfoUpdate}
+                    onProductDuplicate={handleProductDuplicate}
                     shopPricingConfig={shopPricingConfig}
                     userDiscountSettings={userDiscountSettings}
                     isLoadingAsins={loadingProductIndexes.includes(row.originalIndex)}
@@ -223,11 +224,11 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
         {/* 機能説明 */}
         <div className="minimal-card p-6 bg-amber-50 border-amber-200">
           <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-            🔧 テーブル機能について
+            🔧 複数ASIN管理・テーブル機能について
           </h4>
           <div className="text-sm text-amber-800 space-y-2">
             <p>
-              • <strong>複数ASIN表示</strong>: 1つの商品に複数ASINがある場合、ASIN数分の行で表示
+              • <strong>複数ASIN管理</strong>: 商品名の横の複製ボタンで同じ商品を複製し、異なるASINを登録可能
             </p>
             <p>
               • <strong>列幅調整</strong>: 各列の境界をドラッグして幅を調整できます
@@ -252,6 +253,9 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             </p>
             <p>
               • <strong>画像ホバー</strong>: 商品画像にマウスを合わせると拡大表示されます
+            </p>
+            <p>
+              • <strong>商品複製</strong>: 商品名にマウスを合わせて複製ボタンをクリックすると、同じ商品が複製され、異なるASINを登録できます
             </p>
             <p>
               • <strong>新規フィールド</strong>: 公式有無、Amazon有無、苦情回数を追加（チェックボックス・数値編集可能）
