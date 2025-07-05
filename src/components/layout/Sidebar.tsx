@@ -91,14 +91,14 @@ const navigation: NavItem[] = [
 // 下部メニュー（設定・ASIN一括登録）
 const bottomNavigation: NavItem[] = [
   {
-    title: "設定",
-    href: "/settings",
-    icon: <Settings className="w-5 h-5" />,
-  },
-  {
     title: "ASIN一括登録", 
     href: "/asin-upload",
     icon: <Upload className="w-5 h-5" />,
+  },
+  {
+    title: "設定",
+    href: "/settings",
+    icon: <Settings className="w-5 h-5" />,
   },
 ];
 
