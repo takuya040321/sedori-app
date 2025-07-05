@@ -71,6 +71,26 @@ const navigation: NavItem[] = [
     ],
   },
   {
+    title: "Yahoo",
+    icon: <Store className="w-5 h-5 opacity-50" />,
+    children: [
+      {
+        title: "VT Cosmetics",
+        href: "/shop/dummy",
+        icon: <Package className="w-4 h-4 opacity-50" />,
+      },
+      {
+        title: "DHC",
+        href: "/shop/dummy",
+        icon: <ShoppingBag className="w-4 h-4 opacity-50" />,
+      },
+    ],
+  },
+];
+
+// 下部メニュー（設定・ASIN一括登録）
+const bottomNavigation: NavItem[] = [
+  {
     title: "設定",
     href: "/settings",
     icon: <Settings className="w-5 h-5" />,
@@ -185,6 +205,18 @@ export function Sidebar() {
       {/* ナビゲーション */}
       <div className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => (
+          <NavItemComponent key={item.title} item={item} />
+        ))}
+      </div>
+
+      {/* 区切り線 */}
+      <div className="px-4">
+        <div className="border-t border-gray-200"></div>
+      </div>
+
+      {/* 下部ナビゲーション */}
+      <div className="p-4 space-y-2">
+        {bottomNavigation.map((item) => (
           <NavItemComponent key={item.title} item={item} />
         ))}
       </div>

@@ -75,6 +75,11 @@ export function useProductTable(category: string, shopName: string, initialProdu
       filtered = filtered.filter(product => !!product.hidden);
     }
 
+    // 非表示商品を除くフィルター
+    if (filters.excludeHidden) {
+      filtered = filtered.filter(product => !product.hidden);
+    }
+
     // 危険物フィルター
     if (filters.showDangerousGoods) {
       filtered = filtered.filter(product => 

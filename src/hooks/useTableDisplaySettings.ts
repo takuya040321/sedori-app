@@ -7,6 +7,7 @@ const STORAGE_KEY = "shopscaper-table-display-settings";
 const DEFAULT_SETTINGS: FilterSettings = {
   search: '',
   showHiddenOnly: false,
+  excludeHidden: false,
   showDangerousGoods: false,
   excludeDangerousGoods: false,
   showPartnerCarrierUnavailable: false,

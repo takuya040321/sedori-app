@@ -99,6 +99,16 @@ export default function SettingsPage() {
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
+                      checked={settings.excludeHidden}
+                      onChange={(e) => updateSetting('excludeHidden', e.target.checked)}
+                      className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
+                    />
+                    <span className="text-sm">非表示商品を除く</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
                       checked={settings.showProfitableOnly}
                       onChange={(e) => updateSetting('showProfitableOnly', e.target.checked)}
                       className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
