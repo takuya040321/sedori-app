@@ -26,8 +26,8 @@ async function migrateData() {
   console.log('🚀 データ移行を開始します...');
 
   try {
-    // 0. 初期ショップデータを確実に投入
-    await ensureShopsExist();
+    // 0. データベース接続テスト
+    await testDatabaseConnection();
     
     // 1. 商品データの移行
     await migrateProducts();
@@ -42,35 +42,25 @@ async function migrateData() {
   }
 }
 
-async function ensureShopsExist() {
-  console.log('\n🏪 ショップデータを確認・投入中...');
+async function testDatabaseConnection() {
+  console.log('\n🔍 データベース接続をテスト中...');
   
-  const shops = [
-    { category: 'official', name: 'dhc', display_name: 'DHC' },
-    { category: 'official', name: 'vt-cosmetics', display_name: 'VT Cosmetics' },
-    { category: 'rakuten', name: 'dhc', display_name: 'DHC (楽天)' },
-    { category: 'rakuten', name: 'vt-cosmetics', display_name: 'VT Cosmetics (楽天)' },
-    { category: 'yahoo', name: 'dhc', display_name: 'DHC (Yahoo)' },
-    { category: 'yahoo', name: 'vt-cosmetics', display_name: 'VT Cosmetics (Yahoo)' }
-  ];
-
-  for (const shop of shops) {
-    const { error } = await supabase
+  try {
+    // shopsテーブルの存在確認
+    const { data, error } = await supabase
       .from('shops')
-      .upsert({
-        category: shop.category,
-        name: shop.name,
-        display_name: shop.display_name,
-        last_updated: new Date().toISOString()
-      }, {
-        onConflict: 'category,name'
-      });
-
+      .select('count(*)')
+      .limit(1);
+    
     if (error) {
-      console.error(`❌ ショップ投入エラー (${shop.category}/${shop.name}):`, error);
-    } else {
-      console.log(`✅ ショップ確認: ${shop.category}/${shop.name}`);
+      console.error('❌ データベース接続エラー:', error);
+      throw new Error('データベースに接続できません。マイグレーションが実行されているか確認してください。');
     }
+    
+    console.log('✅ データベース接続成功');
+  } catch (error) {
+    console.error('❌ データベース接続テスト失敗:', error);
+    throw error;
   }
 }
 
@@ -109,35 +99,43 @@ async function migrateProducts() {
               const fileContent = await fs.readFile(filePath, 'utf-8');
               const shopData = JSON.parse(fileContent);
               
-              // ショップ情報を取得
+              // ショップ情報を確保
               const { data: shop, error: shopError } = await supabase
                 .from('shops')
-                .select('*')
-                .eq('category', category)
-                .eq('name', shopName)
+                .upsert({
+                  category: category,
+                  name: shopName,
+                  display_name: shopName.toUpperCase(),
+                  last_updated: shopData.lastUpdated || new Date().toISOString()
+                }, {
+                  onConflict: 'category,name'
+                })
+                .select()
                 .single();
               
               if (shopError || !shop) {
-                console.error(`    ❌ ショップが見つかりません: ${category}/${shopName}`);
+                console.error(`    ❌ ショップ作成/取得エラー: ${category}/${shopName}`);
                 console.error(`    エラー詳細:`, shopError);
                 continue;
               }
               
-              // ショップの最終更新日時を更新
-              await supabase
-                .from('shops')
-                .update({ last_updated: shopData.lastUpdated || new Date().toISOString() })
-                .eq('id', shop.id);
+              console.log(`    ✅ ショップ確認: ${shop.display_name}`);
               
               // 既存の商品を削除
-              await supabase
+              const { error: deleteError } = await supabase
                 .from('products')
                 .delete()
                 .eq('shop_id', shop.id);
               
+              if (deleteError) {
+                console.error(`    ❌ 既存商品削除エラー:`, deleteError);
+              }
+              
               // 商品データを挿入
               let productCount = 0;
-              for (const product of shopData.products || []) {
+              const products = shopData.products || [];
+              
+              for (const product of products) {
                 try {
                   // 必須フィールドの検証
                   if (!product.name || typeof product.price !== 'number') {
@@ -162,7 +160,7 @@ async function migrateProducts() {
                     .single();
                   
                   if (productError) {
-                    console.error(`    ❌ 商品挿入エラー (${product.name}):`, productError);
+                    console.error(`    ❌ 商品挿入エラー (${product.name}):`, productError.message);
                     continue;
                   }
                   
@@ -202,7 +200,7 @@ async function migrateProducts() {
                           .single();
                         
                         if (asinError) {
-                          console.error(`    ❌ ASIN情報upsertエラー (${asinInfo.asin}):`, asinError);
+                          console.error(`    ❌ ASIN情報upsertエラー (${asinInfo.asin}):`, asinError.message);
                           continue;
                         }
                         
@@ -217,23 +215,23 @@ async function migrateProducts() {
                           });
 
                         if (relationError) {
-                          console.error(`    ❌ 商品-ASIN関連エラー:`, relationError);
+                          console.error(`    ❌ 商品-ASIN関連エラー:`, relationError.message);
                         }
                       } catch (asinProcessError) {
-                        console.error(`    ❌ ASIN処理エラー (${asinInfo.asin}):`, asinProcessError);
+                        console.error(`    ❌ ASIN処理エラー (${asinInfo.asin}):`, asinProcessError.message);
                       }
                     }
                   }
                   
                   productCount++;
                 } catch (productProcessError) {
-                  console.error(`    ❌ 商品処理エラー (${product.name}):`, productProcessError);
+                  console.error(`    ❌ 商品処理エラー (${product.name}):`, productProcessError.message);
                 }
               }
               
               console.log(`    ✅ ${productCount}件の商品を移行しました`);
             } catch (fileError) {
-              console.error(`    ❌ ファイル処理エラー (${filePath}):`, fileError);
+              console.error(`    ❌ ファイル処理エラー (${filePath}):`, fileError.message);
             }
           }
         }
@@ -311,19 +309,19 @@ async function migrateAsinData() {
                 });
               
               if (error) {
-                console.error(`    ❌ ASIN情報upsertエラー (${asinInfo.asin}):`, error);
+                console.error(`    ❌ ASIN情報upsertエラー (${asinInfo.asin}):`, error.message);
                 continue;
               }
               
               asinCount++;
             } catch (asinProcessError) {
-              console.error(`    ❌ ASIN処理エラー (${asinInfo.asin}):`, asinProcessError);
+              console.error(`    ❌ ASIN処理エラー (${asinInfo.asin}):`, asinProcessError.message);
             }
           }
           
           console.log(`    ✅ ${asinCount}件のASIN情報を移行しました`);
         } catch (fileError) {
-          console.error(`    ❌ ファイル処理エラー (${filePath}):`, fileError);
+          console.error(`    ❌ ファイル処理エラー (${filePath}):`, fileError.message);
         }
       }
     }
