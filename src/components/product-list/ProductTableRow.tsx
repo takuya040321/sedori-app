@@ -161,13 +161,10 @@ export const ProductTableRow: React.FC<Props> = ({
     );
   };
   // 文字列を20文字で切り詰める関数
-  const truncateText = (text: string, maxLength: number = 40): { truncated: string; isTruncated: boolean } => {
+  const truncateText = (text: string, maxLength: number = 40): string => {
     if (!text) return "";
     const isTruncated = text.length > maxLength;
-    return {
-      truncated: isTruncated ? text.substring(0, maxLength) + "..." : text,
-      isTruncated
-    };
+    return isTruncated ? text.substring(0, maxLength) + "..." : text;
   };
 
   // ASIN追加処理
@@ -214,7 +211,7 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {Math.round(actualCost).toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}
             </div>
             <div className="text-xs text-gray-500">
               -{shopPricingConfig.fixedDiscount}円
@@ -231,7 +228,7 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {Math.round(actualCost).toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}
             </div>
             <div className="text-xs text-gray-500">
               {userDiscountRate > 0 && (
@@ -248,7 +245,7 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {Math.round(actualCost).toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}
             </div>
             <div className="text-xs text-gray-500">
               ({discountRate}%)
@@ -257,7 +254,7 @@ export const ProductTableRow: React.FC<Props> = ({
         );
 
       default:
-        return `${Math.round(actualCost).toLocaleString()}円`;
+        return `${Math.round(actualCost).toLocaleString()}`;
     }
   };
 
@@ -273,13 +270,13 @@ export const ProductTableRow: React.FC<Props> = ({
           return (
             <div>
               <div className="line-through text-gray-400 text-xs">
-                {product.price.toLocaleString()}円
+                {product.price.toLocaleString()}
               </div>
               <div className="text-red-400 font-bold text-sm">
-                {product.salePrice.toLocaleString()}円
+                {product.salePrice.toLocaleString()}
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {Math.round(unitPrice).toLocaleString()}円/1{priceInfo.unitType}
+                {Math.round(unitPrice).toLocaleString()}/{priceInfo.unitType}
               </div>
             </div>
           );
@@ -287,10 +284,10 @@ export const ProductTableRow: React.FC<Props> = ({
           return (
             <div>
               <div className="text-sm">
-                {product.price.toLocaleString()}円
+                {product.price.toLocaleString()}
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {Math.round(unitPrice).toLocaleString()}円/1{priceInfo.unitType}
+                {Math.round(unitPrice).toLocaleString()}/{priceInfo.unitType}
               </div>
             </div>
           );
@@ -441,10 +438,7 @@ export const ProductTableRow: React.FC<Props> = ({
             title={product.name}
           >
             <div className="text-xs leading-tight">
-              {(() => {
-                const result = truncateText(product.name, 40);
-                return result.truncated;
-              })()}
+              {truncateText(product.name, 40)}
             </div>
           </div>
         ) : (
@@ -518,10 +512,7 @@ export const ProductTableRow: React.FC<Props> = ({
               title={`${asinInfo.productName}\nクリックでAmazonページを開く`}
             >
               <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
-                {(() => {
-                  const result = truncateText(asinInfo.productName, 40);
-                  return result.truncated;
-                })()}
+                {truncateText(asinInfo.productName, 40)}
                 <ExternalLink className="w-2 h-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
