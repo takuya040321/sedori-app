@@ -865,7 +865,8 @@
           "sellingFee": 10,
           "fbaFee": 288,
           "jan": [],
-          "note": ""
+          "note": "",
+          "hasOfficialStore": true
         }
       ]
     },
