@@ -90,7 +90,7 @@
           "hasAmazonStore": false,
           "hasOfficialStore": false,
           "isPartnerCarrierUnavailable": false,
-          "isDangerousGoods": true
+          "isDangerousGoods": false
         }
       ]
     },
