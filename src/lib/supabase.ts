@@ -160,5 +160,6 @@ export interface Database {
         };
       };
     };
+  }
   console.warn('Supabase environment variables not configured. Using dummy values for development.');
 }
