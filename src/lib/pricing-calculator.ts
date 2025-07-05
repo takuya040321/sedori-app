@@ -38,8 +38,25 @@ export function calculateActualCost(
   userDiscountSettings: UserDiscountSettings = {},
   productName?: string
 ): number {
-  // 基準価格を決定（セール価格があればセール価格、なければ通常価格）
-  const basePrice = salePrice || originalPrice;
+  // DHCの場合、1個あたり価格を優先的に使用
+  let basePrice = originalPrice;
+  if (config.shopName === 'dhc' && productName) {
+    const { count } = extractUnitCount(productName);
+    if (count > 1) {
+      // 複数個商品の場合、1個あたり価格を基準にする
+      if (salePrice) {
+        basePrice = salePrice / count;
+      } else {
+        basePrice = originalPrice / count;
+      }
+    } else {
+      // 単品の場合は従来通り（セール価格 > 通常価格）
+      basePrice = salePrice || originalPrice;
+    }
+  } else {
+    // 他のショップは従来通り
+    basePrice = salePrice || originalPrice;
+  }
   
   let actualCost = 0;
   
@@ -68,13 +85,6 @@ export function calculateActualCost(
       actualCost = basePrice;
   }
 
-  // DHCの場合、商品名から個数を検出して1個あたりの価格を計算
-  if (config.shopName === 'dhc' && productName) {
-    const { count } = extractUnitCount(productName);
-    if (count > 1) {
-      actualCost = actualCost / count;
-    }
-  }
 
   return actualCost;
 }
@@ -90,11 +100,6 @@ export interface ProfitCalculationResult {
     userDiscount?: number;
     totalDiscount: number;
     discountType: string;
-  };
-  unitInfo?: {
-    count: number;
-    unitType: string;
-    isPerUnit: boolean;
   };
 }
 
@@ -117,22 +122,21 @@ export function calculateProfitWithShopPricing(
   const roi = calcROI(amazonPrice, sellingFee, fbaFee, actualCost);
   
   // 割引情報
-  const basePrice = salePrice || originalPrice;
+  let basePrice = originalPrice;
+  if (config.shopName === 'dhc' && productName) {
+    const { count } = extractUnitCount(productName);
+    if (count > 1) {
+      basePrice = (salePrice || originalPrice) / count;
+    } else {
+      basePrice = salePrice || originalPrice;
+    }
+  } else {
+    basePrice = salePrice || originalPrice;
+  }
+  
   let baseDiscount = 0;
   let userDiscount = 0;
   let discountType = "";
-  
-  // 単位情報
-  let unitInfo: { count: number; unitType: string; isPerUnit: boolean } | undefined;
-  
-  if (config.shopName === 'dhc' && productName) {
-    const { count, unitType } = extractUnitCount(productName);
-    unitInfo = {
-      count,
-      unitType,
-      isPerUnit: count > 1
-    };
-  }
   
   switch (config.priceCalculationType) {
     case 'fixed_discount':
@@ -167,7 +171,6 @@ export function calculateProfitWithShopPricing(
       totalDiscount: baseDiscount + userDiscount,
       discountType,
     },
-    unitInfo,
   };
 }
 

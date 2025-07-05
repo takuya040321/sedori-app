@@ -206,7 +206,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                   </p>
                   {shopName === 'dhc' && (
                     <p className="text-blue-700 bg-blue-100 px-3 py-2 rounded-lg">
-                      🔢 <strong>複数個商品対応</strong>: 「2本」「3個」などの商品は個数で割って1個あたりの価格で利益計算
+                      🔢 <strong>複数個商品対応</strong>: 「2本」「3個」などの商品は価格列に1個あたり価格を表示し、その価格を基準に利益計算
                     </p>
                   )}
                 </>
@@ -247,7 +247,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             </p>
             {shopName === 'dhc' && (
               <p>
-                • <strong>1個あたり計算</strong>: DHCの複数個商品は自動で1個あたりの価格・利益を計算
+                • <strong>1個あたり表示</strong>: DHCの複数個商品は価格列に1個あたり価格を表示し、その価格で利益計算
               </p>
             )}
           </div>

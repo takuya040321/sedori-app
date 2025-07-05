@@ -95,14 +95,6 @@ export const ProductTableRow: React.FC<Props> = ({
       product.name // 商品名を渡して個数検出
     );
 
-    // DHCの場合、単位情報を取得
-    let unitInfo = null;
-    if (shopPricingConfig.shopName === 'dhc') {
-      const { count, unitType } = extractUnitCount(product.name);
-      if (count > 1) {
-        unitInfo = { count, unitType };
-      }
-    }
 
     switch (shopPricingConfig.priceCalculationType) {
       case 'fixed_discount':
@@ -110,7 +102,6 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
-              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{shopPricingConfig.fixedDiscount}円
@@ -128,11 +119,9 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
-              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{totalDiscountRate}%
-              {unitInfo && ` ÷ ${unitInfo.count}`}
               {userDiscountRate > 0 && (
                 <div>({baseDiscountRate}%+{userDiscountRate}%)</div>
               )}
@@ -146,11 +135,9 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
               {actualCost.toLocaleString()}円
-              {unitInfo && <div className="text-xs text-gray-500">1{unitInfo.unitType}あたり</div>}
             </div>
             <div className="text-xs text-gray-500">
               -{discountRate}%
-              {unitInfo && ` ÷ ${unitInfo.count}`}
             </div>
           </div>
         );
@@ -160,6 +147,61 @@ export const ProductTableRow: React.FC<Props> = ({
     }
   };
 
+  // 価格表示の生成（DHC複数個商品対応）
+  const getPriceDisplay = () => {
+    // DHCの場合、複数個商品の1個あたり価格を表示
+    if (shopPricingConfig?.shopName === 'dhc') {
+      const { count, unitType } = extractUnitCount(product.name);
+      if (count > 1) {
+        const unitPrice = (product.salePrice || product.price) / count;
+        
+        if (product.salePrice) {
+          return (
+            <div>
+              <div className="line-through text-gray-400 text-xs">
+                {product.price.toLocaleString()}円
+              </div>
+              <div className="text-red-400 font-bold text-sm">
+                {product.salePrice.toLocaleString()}円
+              </div>
+              <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
+                {unitPrice.toLocaleString()}円/1{unitType}
+              </div>
+            </div>
+          );
+        } else {
+          return (
+            <div>
+              <div className="text-sm">
+                {product.price.toLocaleString()}円
+              </div>
+              <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
+                {unitPrice.toLocaleString()}円/1{unitType}
+              </div>
+            </div>
+          );
+        }
+      }
+    }
+    
+    // 従来の表示（DHC以外、または単品商品）
+    if (product.salePrice) {
+      return (
+        <div>
+          <div className="line-through text-gray-400 text-xs">
+            {product.price.toLocaleString()}
+          </div>
+          <div className="text-red-400 font-bold text-sm">
+            {product.salePrice.toLocaleString()}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="text-sm">{product.price.toLocaleString()}</div>
+      );
+    }
+  };
   // 利益情報を計算（1個あたり対応）
   const getProfitInfo = () => {
     if (!asinInfo || !shopPricingConfig || asinInfo.price === 0 || 
@@ -182,7 +224,6 @@ export const ProductTableRow: React.FC<Props> = ({
       profit: profitResult.profit,
       profitMargin: profitResult.profitMargin,
       roi: profitResult.roi,
-      unitInfo: profitResult.unitInfo,
     };
   };
 
@@ -263,18 +304,7 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 3. 価格 - 最初の行のみ表示 */}
       <td className="px-2 py-1 text-center">
         {isFirstAsinRow ? (
-          product.salePrice ? (
-            <div>
-              <div className="line-through text-gray-400 text-xs">
-                {product.price.toLocaleString()}
-              </div>
-              <div className="text-red-400 font-bold text-sm">
-                {product.salePrice.toLocaleString()}
-              </div>
-            </div>
-          ) : (
-            <div className="text-sm">{product.price.toLocaleString()}</div>
-          )
+          getPriceDisplay()
         ) : null}
       </td>
       
@@ -419,9 +449,6 @@ export const ProductTableRow: React.FC<Props> = ({
             profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
           }`}>
             {profitInfo.profit.toLocaleString()}円
-            {profitInfo.unitInfo?.isPerUnit && (
-              <div className="text-xs text-gray-500">1{profitInfo.unitInfo.unitType}あたり</div>
-            )}
           </div>
         ) : (
           <span className="text-gray-400 text-xs">-</span>
