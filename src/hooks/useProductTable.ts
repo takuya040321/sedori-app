@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import useSWR from "swr";
 import { Product, AsinInfo, SortField, SortDirection, FilterSettings } from "@/types/product";
 import { fetchASINInfo } from "@/lib/fetchASINInfo";
+import { calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
+import { getShopPricingConfig } from "@/lib/pricing-config";
 
 export function useProductTable(category: string, shopName: string, initialProducts: Product[]) {
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -27,6 +29,38 @@ export function useProductTable(category: string, shopName: string, initialProdu
     hasAsin: null,
   });
 
+  // ショップ設定を取得
+  const shopPricingConfig = getShopPricingConfig(category, shopName);
+
+  // 利益計算のヘルパー関数
+  const calculateProductProfit = (product: Product, userDiscountSettings = {}) => {
+    if (!product.asins || product.asins.length === 0 || !shopPricingConfig) {
+      return { profit: 0, profitMargin: 0, roi: 0 };
+    }
+
+    const asinInfo = product.asins[0]; // 最初のASINで計算
+    if (!asinInfo || asinInfo.price === 0 || 
+        asinInfo.sellingFee === null || asinInfo.fbaFee === null) {
+      return { profit: 0, profitMargin: 0, roi: 0 };
+    }
+
+    const profitResult = calculateProfitWithShopPricing(
+      product.price,
+      product.salePrice,
+      asinInfo.price,
+      asinInfo.sellingFee,
+      asinInfo.fbaFee,
+      shopPricingConfig,
+      userDiscountSettings,
+      product.name
+    );
+
+    return {
+      profit: profitResult.profit,
+      profitMargin: profitResult.profitMargin,
+      roi: profitResult.roi,
+    };
+  };
   // フィルタリング処理
   const filteredProducts = useMemo(() => {
     let filtered = [...allProducts];
@@ -144,19 +178,25 @@ export function useProductTable(category: string, shopName: string, initialProdu
           bValue = (b.asins && b.asins[0]?.fbaFee) || 0;
           break;
         case 'profit':
-          // 利益額での並び替え（計算が必要）
-          aValue = 0; // 実際の利益計算は複雑なので簡易版
-          bValue = 0;
+          // 利益額での並び替え
+          const aProfitData = calculateProductProfit(a);
+          const bProfitData = calculateProductProfit(b);
+          aValue = aProfitData.profit;
+          bValue = bProfitData.profit;
           break;
         case 'profitMargin':
           // 利益率での並び替え
-          aValue = 0;
-          bValue = 0;
+          const aMarginData = calculateProductProfit(a);
+          const bMarginData = calculateProductProfit(b);
+          aValue = aMarginData.profitMargin;
+          bValue = bMarginData.profitMargin;
           break;
         case 'roi':
           // ROIでの並び替え
-          aValue = 0;
-          bValue = 0;
+          const aRoiData = calculateProductProfit(a);
+          const bRoiData = calculateProductProfit(b);
+          aValue = aRoiData.roi;
+          bValue = bRoiData.roi;
           break;
         case 'isDangerousGoods':
           aValue = (a.asins && a.asins[0]?.isDangerousGoods) ? 1 : 0;
