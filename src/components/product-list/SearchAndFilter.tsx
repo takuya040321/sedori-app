@@ -42,7 +42,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   const clearFilters = () => {
     onFiltersChange({
       search: '',
-      showHidden: false,
+      showHiddenOnly: false,
       showDangerousGoods: false,
       showPartnerCarrierUnavailable: false,
       showProfitableOnly: false,
@@ -53,7 +53,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
   const hasActiveFilters = 
     filters.search !== '' ||
-    filters.showHidden ||
+    filters.showHiddenOnly ||
     filters.showDangerousGoods ||
     filters.showPartnerCarrierUnavailable ||
     filters.showProfitableOnly ||
@@ -109,11 +109,11 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={filters.showHidden}
-                  onChange={(e) => updateFilter('showHidden', e.target.checked)}
+                  checked={filters.showHiddenOnly}
+                  onChange={(e) => updateFilter('showHiddenOnly', e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm">非表示商品を表示</span>
+                <span className="text-sm">非表示商品のみを表示</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">

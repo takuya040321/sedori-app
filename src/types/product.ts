@@ -105,7 +105,7 @@ export type SortDirection = 'asc' | 'desc';
 // フィルタリング設定
 export interface FilterSettings {
   search: string;
-  showHidden: boolean;
+  showHiddenOnly: boolean; // 非表示商品のみを表示
   showDangerousGoods: boolean;
   showPartnerCarrierUnavailable: boolean;
   showProfitableOnly: boolean; // 利益商品のみ表示

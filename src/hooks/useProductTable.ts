@@ -22,7 +22,7 @@ export function useProductTable(category: string, shopName: string, initialProdu
   // フィルター状態
   const [filters, setFilters] = useState<FilterSettings>({
     search: '',
-    showHidden: false,
+    showHiddenOnly: false,
     showDangerousGoods: false,
     showPartnerCarrierUnavailable: false,
     showProfitableOnly: false,
@@ -76,9 +76,9 @@ export function useProductTable(category: string, shopName: string, initialProdu
       );
     }
 
-    // 非表示商品フィルター
-    if (!filters.showHidden) {
-      filtered = filtered.filter(product => !product.hidden);
+    // 非表示商品のみフィルター
+    if (filters.showHiddenOnly) {
+      filtered = filtered.filter(product => !!product.hidden);
     }
 
     // 危険物フィルター
