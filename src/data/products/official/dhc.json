@@ -1721,7 +1721,23 @@
       "name": "DHC薬用アクネコントロール フレッシュ ローション",
       "imageUrl": "https://www.dhc.co.jp/goods/22901/summary.jpg",
       "price": 1100,
-      "updatedAt": "2025-07-04T03:09:10.986Z"
+      "updatedAt": "2025-07-04T03:09:10.986Z",
+      "asins": [
+        {
+          "asin": "B07KGR3NCF",
+          "url": "https://www.amazon.co.jp/dp/B07KGR3NCF",
+          "productName": "DHC 薬用化粧水 アクネコントロール フレッシュ ローション 160ml 医薬部外品",
+          "brand": "DHC",
+          "price": 1980,
+          "soldUnit": 0,
+          "sellingFee": 10,
+          "fbaFee": 434,
+          "jan": [
+            "4511413523889"
+          ],
+          "note": ""
+        }
+      ]
     },
     {
       "name": "DHC [F1]フレッシュ ローション",
