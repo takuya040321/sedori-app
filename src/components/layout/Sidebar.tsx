@@ -70,22 +70,6 @@ const navigation: NavItem[] = [
       },
     ],
   },
-  {
-    title: "Yahoo",
-    icon: <Store className="w-5 h-5 opacity-50" />,
-    children: [
-      {
-        title: "VT Cosmetics",
-        href: "/shop/dummy",
-        icon: <Package className="w-4 h-4 opacity-50" />,
-      },
-      {
-        title: "DHC",
-        href: "/shop/dummy",
-        icon: <ShoppingBag className="w-4 h-4 opacity-50" />,
-      },
-    ],
-  },
 ];
 
 // 下部メニュー（設定・ASIN一括登録）
