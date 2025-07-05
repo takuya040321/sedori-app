@@ -160,6 +160,12 @@ export const ProductTableRow: React.FC<Props> = ({
       </div>
     );
   };
+  // 文字列を20文字で切り詰める関数
+  const truncateText = (text: string, maxLength: number = 20): string => {
+    if (!text) return "";
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
   // ASIN追加処理
   const handleAddAsin = async () => {
     if (newAsin.length === 10) {
@@ -359,7 +365,7 @@ export const ProductTableRow: React.FC<Props> = ({
   return (
     <tr className={rowClassName}>
       {/* 1. 画像 - 最初の行のみ表示 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-16">
         {isFirstAsinRow ? (
           <div 
             className="relative"
@@ -424,35 +430,37 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 2. 商品名 - 最初の行のみ表示 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-48">
         {isFirstAsinRow ? (
-          <div className="max-w-[200px]" title={product.name}>
-            <div className="text-sm leading-tight break-words">
-              {product.name}
+          <div className="product-name-cell" title={product.name}>
+            <div className="text-xs leading-tight">
+              <span className="truncate-20">
+                {truncateText(product.name, 20)}
+              </span>
             </div>
           </div>
         ) : (
-          <div className="text-gray-400 text-xs italic">↳ 追加ASIN</div>
+          <div className="text-gray-400 text-xs italic">↳ 追加</div>
         )}
       </td>
       
       {/* 3. 価格 - 最初の行のみ表示 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-20">
         {isFirstAsinRow ? (
           getPriceDisplay()
         ) : null}
       </td>
       
       {/* 4. 仕入価格 - 最初の行のみ表示 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-24">
         {isFirstAsinRow ? getPurchasePriceDisplay() : null}
       </td>
       
       {/* 5. ASIN */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-24">
         {asinInfo ? (
           <div className="flex items-center gap-2">
-            <div className="font-mono text-blue-600 font-medium text-sm">
+            <div className="font-mono text-blue-600 font-medium text-xs">
               {asinInfo.asin}
             </div>
             {asinIndex !== undefined && (
@@ -460,9 +468,9 @@ export const ProductTableRow: React.FC<Props> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onAsinRemove(rowIndex, asinIndex)}
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-2 h-2" />
               </Button>
             )}
           </div>
@@ -473,19 +481,19 @@ export const ProductTableRow: React.FC<Props> = ({
               value={newAsin}
               onChange={(e) => handleAsinInputChange(e.target.value)}
               placeholder="新しいASIN"
-              className="w-28 h-8 text-xs"
+              className="w-20 h-6 text-xs"
               maxLength={10}
             />
             <Button
               size="sm"
               onClick={handleAddAsin}
               disabled={newAsin.length !== 10 || isAddingAsin}
-              className="h-8 px-2 text-xs"
+              className="h-6 px-1 text-xs"
             >
               {isAddingAsin ? (
-                <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Plus className="w-3 h-3" />
+                <Plus className="w-2 h-2" />
               )}
             </Button>
           </div>
@@ -493,22 +501,24 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 6. Amazon商品名 - 折り返し表示とクリック機能 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-52">
         {asinInfo ? (
           asinInfo.productName ? (
-            <div 
-              className="max-w-[250px] cursor-pointer group"
+            <div
+              className="amazon-product-name-cell cursor-pointer group"
               onClick={handleAmazonLinkClick}
               title={`${asinInfo.productName}\nクリックでAmazonページを開く`}
             >
-              <div className="text-sm leading-tight break-words text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
-                {asinInfo.productName}
-                <ExternalLink className="w-3 h-3 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
+                <span className="truncate-20">
+                  {truncateText(asinInfo.productName, 20)}
+                </span>
+                <ExternalLink className="w-2 h-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-1 text-amber-600">
-              <Edit className="w-3 h-3" />
+              <Edit className="w-2 h-2" />
               <span className="text-xs">手動入力が必要</span>
             </div>
           )
@@ -518,7 +528,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 7. Amazon価格 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-20">
         {asinInfo ? (
           asinIndex !== undefined ? (
             renderEditableField("price", asinInfo.price, "0", "円")
@@ -531,7 +541,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 8. 月販数 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-16">
         {asinInfo ? (
           asinIndex !== undefined ? (
             renderEditableField("soldUnit", asinInfo.soldUnit, "0", "")
@@ -544,7 +554,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 9. 手数料 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-16">
         {asinInfo ? (
           asinIndex !== undefined ? (
             renderEditableField("sellingFee", asinInfo.sellingFee, "15", "%")
@@ -557,7 +567,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 10. FBA料 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-16">
         {asinInfo ? (
           asinIndex !== undefined ? (
             renderEditableField("fbaFee", asinInfo.fbaFee, "300", "円")
@@ -570,9 +580,9 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 11. 利益額（1個あたり） */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-20">
         {profitInfo.profit !== null && !needsManualInput ? (
-          <div className={`font-medium text-sm ${
+          <div className={`font-medium text-xs ${
             profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
           }`}>
             {Math.round(profitInfo.profit).toLocaleString()}円
@@ -583,9 +593,9 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 12. 利益率 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-16">
         {profitInfo.profitMargin !== null && !needsManualInput ? (
-          <div className={`font-medium text-sm ${
+          <div className={`font-medium text-xs ${
             profitInfo.profitMargin >= 0 ? "text-green-600" : "text-red-600"
           }`}>
             {Math.round(profitInfo.profitMargin)}%
@@ -596,9 +606,9 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 13. ROI */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-16">
         {profitInfo.roi !== null && !needsManualInput ? (
-          <div className={`font-medium text-sm ${
+          <div className={`font-medium text-xs ${
             profitInfo.roi >= 0 ? "text-green-600" : "text-red-600"
           }`}>
             {Math.round(profitInfo.roi)}%
@@ -609,13 +619,13 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 14. 危険物 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {asinInfo && asinIndex !== undefined ? (
           <input
             type="checkbox"
             checked={asinInfo.isDangerousGoods || false}
             onChange={(e) => onDangerousGoodsChange(rowIndex, asinIndex, e.target.checked)}
-            className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+            className="w-3 h-3 text-red-600 border-gray-300 rounded focus:ring-red-500"
           />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -623,13 +633,13 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 15. パートナーキャリア不可 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {asinInfo && asinIndex !== undefined ? (
           <input
             type="checkbox"
             checked={asinInfo.isPartnerCarrierUnavailable || false}
             onChange={(e) => onPartnerCarrierChange(rowIndex, asinIndex, e.target.checked)}
-            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+            className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
           />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -637,13 +647,13 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 16. 公式有無 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {asinInfo && asinIndex !== undefined ? (
           <input
             type="checkbox"
             checked={asinInfo.hasOfficialStore || false}
             onChange={(e) => onAsinInfoUpdate(rowIndex, asinIndex, "hasOfficialStore", e.target.checked)}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -651,13 +661,13 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 17. Amazon有無 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {asinInfo && asinIndex !== undefined ? (
           <input
             type="checkbox"
             checked={asinInfo.hasAmazonStore || false}
             onChange={(e) => onAsinInfoUpdate(rowIndex, asinIndex, "hasAmazonStore", e.target.checked)}
-            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+            className="w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500"
           />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -665,7 +675,7 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 18. 苦情回数 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {asinInfo ? (
           asinIndex !== undefined ? (
             renderEditableField("complaintCount", asinInfo.complaintCount, "0", "")
@@ -678,23 +688,23 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 19. 非表示 - 最初の行のみ表示 */}
-      <td className="px-2 py-1 text-center">
+      <td className="px-2 py-1 text-center w-14">
         {isFirstAsinRow ? (
           <input
             type="checkbox"
             checked={!!product.hidden}
             onChange={(e) => onHiddenChange(rowIndex, e.target.checked)}
-            className="w-4 h-4"
+            className="w-3 h-3"
           />
         ) : null}
       </td>
       
       {/* 20. メモ - 最初の行のみ表示 */}
-      <td className="px-2 py-1">
+      <td className="px-2 py-1 w-28">
         {isFirstAsinRow ? (
           <input
             type="text"
-            className="border px-1 py-0.5 rounded w-28 bg-white text-black text-xs"
+            className="border px-1 py-0.5 rounded w-24 bg-white text-black text-xs"
             value={memoValue}
             onChange={(e) => handleMemoChange(e.target.value)}
             placeholder="メモ"

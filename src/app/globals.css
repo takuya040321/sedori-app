@@ -142,14 +142,15 @@
 .minimal-table {
   @apply w-full border-collapse;
   min-width: 1800px; /* 最小幅を設定して横スクロールを確保 */
+  font-size: 0.75rem; /* フォントサイズを1段階下げる（12px） */
 }
 
 .minimal-table th {
-  @apply bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-3 text-left border-b border-gray-200;
+  @apply bg-gray-50 text-gray-700 font-semibold text-xs px-3 py-2 text-left border-b border-gray-200;
 }
 
 .minimal-table td {
-  @apply px-4 py-3 text-sm text-gray-900 border-b border-gray-100;
+  @apply px-3 py-2 text-xs text-gray-900 border-b border-gray-100;
 }
 
 .minimal-table tr:hover {
@@ -160,7 +161,7 @@
 .minimal-table th {
   resize: horizontal;
   overflow: hidden;
-  min-width: 80px;
+  min-width: 60px;
   position: relative;
 }
 
@@ -177,6 +178,31 @@
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
+/* 商品名・Amazon商品名の省略表示 */
+.product-name-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.amazon-product-name-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+/* 20文字制限の表示 */
+.truncate-20 {
+  display: inline-block;
+  max-width: 20ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* ステータスバッジ */
 .status-success {
   @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
