@@ -275,3 +275,20 @@
 .amazon-link:hover .external-link-icon {
   @apply opacity-100;
 }
+/* 画像ホバー拡大のz-index調整 */
+.image-hover-overlay {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* テーブル内の画像ホバー用スタイル */
+.table-image-hover {
+  position: relative;
+  overflow: visible;
+}
+
+.table-image-hover .hover-enlarged {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+}

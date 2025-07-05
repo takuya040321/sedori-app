@@ -6,6 +6,7 @@ import { calculateActualCost, calculateProfitWithShopPricing, extractUnitCount }
 import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   product: Product;
@@ -47,6 +48,7 @@ export const ProductTableRow: React.FC<Props> = ({
   const [isAddingAsin, setIsAddingAsin] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{[key: string]: string}>({});
+  const [isImageHovered, setIsImageHovered] = useState(false);
   const memoTimeoutRef = useRef<NodeJS.Timeout>();
 
   // メモの変更をデバウンス処理
@@ -79,13 +81,15 @@ export const ProductTableRow: React.FC<Props> = ({
     let convertedValue: any = value;
     
     // 型変換
-    if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee") {
+    if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee" || field === "complaintCount") {
       const numValue = parseFloat(value);
       if (field === "sellingFee" || field === "fbaFee") {
         convertedValue = isNaN(numValue) ? null : numValue;
       } else {
         convertedValue = isNaN(numValue) ? 0 : numValue;
       }
+    } else if (field === "hasOfficialStore" || field === "hasAmazonStore") {
+      convertedValue = value === "true";
     }
     
     await onAsinInfoUpdate(rowIndex, asinIndex, field as keyof AsinInfo, convertedValue);
@@ -101,19 +105,26 @@ export const ProductTableRow: React.FC<Props> = ({
   // 編集可能フィールドのレンダリング
   const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
     const isEditing = editingField === field;
-    const displayValue = currentValue === null || currentValue === undefined ? (field === "soldUnit" ? "0" : "-") : 
+    const displayValue = currentValue === null || currentValue === undefined ? (field === "soldUnit" || field === "complaintCount" ? "0" : "-") : 
                         (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
     
     if (isEditing) {
       return (
         <div className="flex items-center gap-1">
           <Input
-            type="number"
+            type={field === "hasOfficialStore" || field === "hasAmazonStore" ? "checkbox" : "number"}
             value={editValues[field] || ""}
-            onChange={(e) => setEditValues({...editValues, [field]: e.target.value})}
+            onChange={(e) => {
+              if (field === "hasOfficialStore" || field === "hasAmazonStore") {
+                setEditValues({...editValues, [field]: e.target.checked ? "true" : "false"});
+              } else {
+                setEditValues({...editValues, [field]: e.target.value});
+              }
+            }}
             className="w-24 h-7 text-xs"
             placeholder={placeholder}
             step={field === "sellingFee" ? "0.1" : "1"}
+            checked={field === "hasOfficialStore" || field === "hasAmazonStore" ? editValues[field] === "true" : undefined}
             onKeyDown={(e) => {
               if (e.key === "Enter") saveEdit(field);
               if (e.key === "Escape") cancelEdit();
@@ -148,6 +159,56 @@ export const ProductTableRow: React.FC<Props> = ({
         <span className="text-sm font-medium">
           {displayValue}{suffix}
         </span>
+        <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+      </div>
+    );
+  };
+
+  // チェックボックス用の編集可能フィールド
+  const renderEditableCheckbox = (field: string, currentValue: boolean) => {
+    const isEditing = editingField === field;
+    
+    if (isEditing) {
+      return (
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={editValues[field] === "true"}
+            onChange={(e) => setEditValues({...editValues, [field]: e.target.checked ? "true" : "false"})}
+            className="w-4 h-4"
+            autoFocus
+          />
+          <Button
+            size="sm"
+            onClick={() => saveEdit(field)}
+            className="h-7 w-7 p-0 bg-green-600 hover:bg-green-700"
+          >
+            <Check className="w-3 h-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={cancelEdit}
+            className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <div 
+        className="cursor-pointer hover:bg-blue-50 p-2 rounded group flex items-center justify-center gap-1 min-h-[32px]"
+        onClick={() => startEditing(field, currentValue)}
+        title="クリックして編集"
+      >
+        <input
+          type="checkbox"
+          checked={currentValue || false}
+          readOnly
+          className="w-4 h-4 pointer-events-none"
+        />
         <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
       </div>
     );
@@ -350,7 +411,11 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 1. 画像 - 最初の行のみ表示 */}
       <td className="px-2 py-1">
         {isFirstAsinRow ? (
-          <div className="relative">
+          <div 
+            className="relative"
+            onMouseEnter={() => setIsImageHovered(true)}
+            onMouseLeave={() => setIsImageHovered(false)}
+          >
             <Avatar className="w-16 h-16 rounded-none">
               {product.imageUrl ? (
                 <AvatarImage
@@ -376,6 +441,32 @@ export const ProductTableRow: React.FC<Props> = ({
                 )}
               </div>
             )}
+            
+            {/* ホバー時の拡大画像 */}
+            <AnimatePresence>
+              {isImageHovered && product.imageUrl && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute z-50 -top-4 -left-4 pointer-events-none"
+                  style={{ zIndex: 1000 }}
+                >
+                  <div className="bg-white border-2 border-gray-300 rounded-lg shadow-2xl p-2">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-64 h-64 object-contain"
+                      style={{ maxWidth: '256px', maxHeight: '256px' }}
+                    />
+                    <div className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded max-w-64 break-words">
+                      {product.name}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ) : (
           <div className="w-16 h-16"></div>
@@ -603,7 +694,34 @@ export const ProductTableRow: React.FC<Props> = ({
         )}
       </td>
       
-      {/* 16. 非表示 - 最初の行のみ表示 */}
+      {/* 16. 公式有無 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo && asinIndex !== undefined ? (
+          renderEditableCheckbox("hasOfficialStore", asinInfo.hasOfficialStore || false)
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 17. Amazon有無 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo && asinIndex !== undefined ? (
+          renderEditableCheckbox("hasAmazonStore", asinInfo.hasAmazonStore || false)
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 18. 苦情回数 */}
+      <td className="px-2 py-1 text-center">
+        {asinInfo && asinIndex !== undefined ? (
+          renderEditableField("complaintCount", asinInfo.complaintCount || 0, "0", "件")
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </td>
+      
+      {/* 19. 非表示 - 最初の行のみ表示 */}
       <td className="px-2 py-1 text-center">
         {isFirstAsinRow ? (
           <input
@@ -615,7 +733,7 @@ export const ProductTableRow: React.FC<Props> = ({
         ) : null}
       </td>
       
-      {/* 17. メモ - 最初の行のみ表示 */}
+      {/* 20. メモ - 最初の行のみ表示 */}
       <td className="px-2 py-1">
         {isFirstAsinRow ? (
           <input

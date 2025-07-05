@@ -21,6 +21,9 @@ export const fetchASINInfo = async (asin: string, brand: string): Promise<AsinIn
         note: "手動入力が必要",
         isDangerousGoods: false,
         isPartnerCarrierUnavailable: false,
+        hasOfficialStore: false,
+        hasAmazonStore: false,
+        complaintCount: 0,
       };
     }
     
