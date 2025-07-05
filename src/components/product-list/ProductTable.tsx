@@ -50,6 +50,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
       handlePartnerCarrierChange,
       handleAsinInfoUpdate,
       handleProductDuplicate,
+      handleProductDelete,
     } = useProductTable(category, shopName, initialProducts);
 
     const { userDiscountSettings, updateDiscountSetting, getDiscountSetting } = useUserDiscountSettings();
@@ -170,6 +171,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                     onPartnerCarrierChange={handlePartnerCarrierChange}
                     onAsinInfoUpdate={handleAsinInfoUpdate}
                     onProductDuplicate={handleProductDuplicate}
+                    onProductDelete={handleProductDelete}
                     shopPricingConfig={shopPricingConfig}
                     userDiscountSettings={userDiscountSettings}
                     isLoadingAsins={loadingProductIndexes.includes(row.originalIndex)}
@@ -257,6 +259,9 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             </p>
             <p>
               • <strong>商品複製</strong>: 商品名にマウスを合わせて複製ボタンをクリックすると、同じ商品が複製され、異なるASINを登録できます
+            </p>
+            <p>
+              • <strong>商品削除</strong>: 商品名にマウスを合わせて削除ボタン（ゴミ箱アイコン）をクリックすると、確認ダイアログ後に商品を削除できます
             </p>
             <p>
               • <strong>新規フィールド</strong>: 公式有無、Amazon有無、苦情回数を追加（チェックボックス・数値編集可能）

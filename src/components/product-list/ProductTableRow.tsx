@@ -22,6 +22,7 @@ interface Props {
   onPartnerCarrierChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   onAsinInfoUpdate: (_rowIndex: number, _asinIndex: number, _field: keyof AsinInfo, _value: any) => void;
   onProductDuplicate: (_rowIndex: number) => void;
+  onProductDelete: (_rowIndex: number) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
   isLoadingAsins?: boolean;
@@ -41,6 +42,7 @@ export const ProductTableRow: React.FC<Props> = ({
   onPartnerCarrierChange,
   onAsinInfoUpdate,
   onProductDuplicate,
+  onProductDelete,
   shopPricingConfig,
   userDiscountSettings = {},
   isLoadingAsins = false,
@@ -457,6 +459,16 @@ export const ProductTableRow: React.FC<Props> = ({
               title="この商品を複製して追加ASINを登録"
             >
               <Copy className="w-3 h-3" />
+            </Button>
+            {/* 商品削除ボタン */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onProductDelete(rowIndex)}
+              className="h-5 w-5 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="この商品を削除"
+            >
+              <Trash2 className="w-3 h-3" />
             </Button>
           </div>
         ) : (

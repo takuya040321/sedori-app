@@ -371,6 +371,39 @@ export function useProductTable(category: string, shopName: string, initialProdu
     }
   };
 
+  // 商品削除処理
+  const handleProductDelete = async (_rowIndex: number) => {
+    try {
+      const productToDelete = allProducts[_rowIndex];
+      if (!productToDelete) return;
+
+      // 確認ダイアログ
+      const confirmMessage = `商品「${productToDelete.name}」を削除しますか？\n\nこの操作は取り消せません。`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      // バックエンドに削除リクエスト
+      const response = await fetch(`/api/products/${category}/${shopName}/delete-product`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: _rowIndex }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      console.log(`Product at index ${_rowIndex} successfully deleted`);
+
+      // データを再取得
+      mutate();
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      alert(`商品削除に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
   // メモ更新処理
   const handleMemoChange = async (_rowIndex: number, memo: string) => {
     try {
@@ -586,5 +619,6 @@ export function useProductTable(category: string, shopName: string, initialProdu
     handlePartnerCarrierChange,
     handleAsinInfoUpdate,
     handleProductDuplicate,
+    handleProductDelete,
   };
 }
