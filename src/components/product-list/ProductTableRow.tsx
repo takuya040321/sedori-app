@@ -99,8 +99,16 @@ export const ProductTableRow: React.FC<Props> = ({
   // 編集可能フィールドのレンダリング
   const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
     const isEditing = editingField === field;
-    const displayValue = currentValue === null || currentValue === undefined ? "-" : 
-                        (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
+    
+    // 月販売数と苦情回数の特別処理：0の場合も"-"で表示
+    let displayValue;
+    if (field === "soldUnit" || field === "complaintCount") {
+      displayValue = (currentValue === null || currentValue === undefined || currentValue === 0) ? "-" : 
+                    (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
+    } else {
+      displayValue = currentValue === null || currentValue === undefined ? "-" : 
+                    (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
+    }
     
     if (isEditing) {
       return (
@@ -146,7 +154,9 @@ export const ProductTableRow: React.FC<Props> = ({
         <span className="text-xs font-medium">
           {displayValue}{suffix}
         </span>
-        <Edit className="w-2 h-2 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+        {displayValue !== "-" && (
+          <Edit className="w-2 h-2 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+        )}
       </div>
     );
   };
