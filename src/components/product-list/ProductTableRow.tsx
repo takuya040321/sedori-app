@@ -83,13 +83,7 @@ export const ProductTableRow: React.FC<Props> = ({
     // 型変換
     if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee" || field === "complaintCount") {
       const numValue = parseFloat(value);
-      if (field === "sellingFee" || field === "fbaFee") {
-        convertedValue = isNaN(numValue) ? null : numValue;
-      } else {
-        convertedValue = isNaN(numValue) ? 0 : numValue;
-      }
-    } else if (field === "hasOfficialStore" || field === "hasAmazonStore") {
-      convertedValue = value === "true";
+      convertedValue = isNaN(numValue) ? (field === "sellingFee" || field === "fbaFee" ? null : 0) : numValue;
     }
     
     await onAsinInfoUpdate(rowIndex, asinIndex, field as keyof AsinInfo, convertedValue);
@@ -105,26 +99,19 @@ export const ProductTableRow: React.FC<Props> = ({
   // 編集可能フィールドのレンダリング
   const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
     const isEditing = editingField === field;
-    const displayValue = currentValue === null || currentValue === undefined ? (field === "soldUnit" || field === "complaintCount" ? "0" : "-") : 
+    const displayValue = currentValue === null || currentValue === undefined ? "-" : 
                         (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
     
     if (isEditing) {
       return (
         <div className="flex items-center gap-1">
           <Input
-            type={field === "hasOfficialStore" || field === "hasAmazonStore" ? "checkbox" : "number"}
+            type="number"
             value={editValues[field] || ""}
-            onChange={(e) => {
-              if (field === "hasOfficialStore" || field === "hasAmazonStore") {
-                setEditValues({...editValues, [field]: e.target.checked ? "true" : "false"});
-              } else {
-                setEditValues({...editValues, [field]: e.target.value});
-              }
-            }}
+            onChange={(e) => setEditValues({...editValues, [field]: e.target.value})}
             className="w-24 h-7 text-xs"
             placeholder={placeholder}
             step={field === "sellingFee" ? "0.1" : "1"}
-            checked={field === "hasOfficialStore" || field === "hasAmazonStore" ? editValues[field] === "true" : undefined}
             onKeyDown={(e) => {
               if (e.key === "Enter") saveEdit(field);
               if (e.key === "Escape") cancelEdit();
@@ -152,64 +139,14 @@ export const ProductTableRow: React.FC<Props> = ({
     
     return (
       <div 
-        className="cursor-pointer hover:bg-blue-50 p-2 rounded group flex items-center justify-center gap-1 min-h-[32px]"
+        className="cursor-pointer hover:bg-blue-50 p-1 rounded group flex items-center justify-center gap-1 min-h-[28px]"
         onClick={() => startEditing(field, currentValue)}
         title="クリックして編集"
       >
-        <span className="text-sm font-medium">
+        <span className="text-xs font-medium">
           {displayValue}{suffix}
         </span>
-        <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
-      </div>
-    );
-  };
-
-  // チェックボックス用の編集可能フィールド
-  const renderEditableCheckbox = (field: string, currentValue: boolean) => {
-    const isEditing = editingField === field;
-    
-    if (isEditing) {
-      return (
-        <div className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={editValues[field] === "true"}
-            onChange={(e) => setEditValues({...editValues, [field]: e.target.checked ? "true" : "false"})}
-            className="w-4 h-4"
-            autoFocus
-          />
-          <Button
-            size="sm"
-            onClick={() => saveEdit(field)}
-            className="h-7 w-7 p-0 bg-green-600 hover:bg-green-700"
-          >
-            <Check className="w-3 h-3" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={cancelEdit}
-            className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-3 h-3" />
-          </Button>
-        </div>
-      );
-    }
-    
-    return (
-      <div 
-        className="cursor-pointer hover:bg-blue-50 p-2 rounded group flex items-center justify-center gap-1 min-h-[32px]"
-        onClick={() => startEditing(field, currentValue)}
-        title="クリックして編集"
-      >
-        <input
-          type="checkbox"
-          checked={currentValue || false}
-          readOnly
-          className="w-4 h-4 pointer-events-none"
-        />
-        <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+        <Edit className="w-2 h-2 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
       </div>
     );
   };
@@ -570,12 +507,10 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 7. Amazon価格 */}
       <td className="px-2 py-1 text-center">
         {asinInfo ? (
-          asinInfo.price ? (
-            <div className="text-sm font-medium">
-              {asinInfo.price.toLocaleString()}円
-            </div>
+          asinIndex !== undefined ? (
+            renderEditableField("price", asinInfo.price, "0", "円")
           ) : (
-            <span className="text-amber-600 text-xs">未設定</span>
+            <span className="text-gray-400 text-xs">-</span>
           )
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -585,10 +520,8 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 8. 月販数 */}
       <td className="px-2 py-1 text-center">
         {asinInfo ? (
-          asinInfo.soldUnit ? (
-            <div className="text-sm">
-              {asinInfo.soldUnit.toLocaleString()}
-            </div>
+          asinIndex !== undefined ? (
+            renderEditableField("soldUnit", asinInfo.soldUnit, "0", "")
           ) : (
             <span className="text-gray-400 text-xs">-</span>
           )
@@ -600,12 +533,10 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 9. 手数料 */}
       <td className="px-2 py-1 text-center">
         {asinInfo ? (
-          asinInfo.sellingFee !== null ? (
-            <div className="text-sm">
-              {asinInfo.sellingFee}%
-            </div>
+          asinIndex !== undefined ? (
+            renderEditableField("sellingFee", asinInfo.sellingFee, "15", "%")
           ) : (
-            <span className="text-amber-600 text-xs">未設定</span>
+            <span className="text-gray-400 text-xs">-</span>
           )
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -615,12 +546,10 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 10. FBA料 */}
       <td className="px-2 py-1 text-center">
         {asinInfo ? (
-          asinInfo.fbaFee !== null ? (
-            <div className="text-sm">
-              {asinInfo.fbaFee.toLocaleString()}円
-            </div>
+          asinIndex !== undefined ? (
+            renderEditableField("fbaFee", asinInfo.fbaFee, "300", "円")
           ) : (
-            <span className="text-amber-600 text-xs">未設定</span>
+            <span className="text-gray-400 text-xs">-</span>
           )
         ) : (
           <span className="text-gray-400 text-xs">-</span>
@@ -697,7 +626,12 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 16. 公式有無 */}
       <td className="px-2 py-1 text-center">
         {asinInfo && asinIndex !== undefined ? (
-          renderEditableCheckbox("hasOfficialStore", asinInfo.hasOfficialStore || false)
+          <input
+            type="checkbox"
+            checked={asinInfo.hasOfficialStore || false}
+            onChange={(e) => onAsinInfoUpdate(rowIndex, asinIndex, "hasOfficialStore", e.target.checked)}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
         )}
@@ -706,7 +640,12 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 17. Amazon有無 */}
       <td className="px-2 py-1 text-center">
         {asinInfo && asinIndex !== undefined ? (
-          renderEditableCheckbox("hasAmazonStore", asinInfo.hasAmazonStore || false)
+          <input
+            type="checkbox"
+            checked={asinInfo.hasAmazonStore || false}
+            onChange={(e) => onAsinInfoUpdate(rowIndex, asinIndex, "hasAmazonStore", e.target.checked)}
+            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+          />
         ) : (
           <span className="text-gray-400 text-xs">-</span>
         )}
