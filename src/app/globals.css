@@ -178,31 +178,6 @@
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
 
-/* 商品名・Amazon商品名の省略表示 */
-.product-name-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: help;
-}
-
-.amazon-product-name-cell {
-  max-width: 250px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: help;
-}
-
-/* 40文字制限の表示 */
-.truncate-20 {
-  display: inline-block;
-  max-width: 40ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 /* ステータスバッジ */
 .status-success {
   @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;

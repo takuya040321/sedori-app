@@ -161,9 +161,13 @@ export const ProductTableRow: React.FC<Props> = ({
     );
   };
   // 文字列を20文字で切り詰める関数
-  const truncateText = (text: string, maxLength: number = 40): string => {
+  const truncateText = (text: string, maxLength: number = 40): { truncated: string; isTruncated: boolean } => {
     if (!text) return "";
-    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+    const isTruncated = text.length > maxLength;
+    return {
+      truncated: isTruncated ? text.substring(0, maxLength) + "..." : text,
+      isTruncated
+    };
   };
 
   // ASIN追加処理
@@ -432,11 +436,15 @@ export const ProductTableRow: React.FC<Props> = ({
       {/* 2. 商品名 - 最初の行のみ表示 */}
       <td className="px-2 py-1 w-48">
         {isFirstAsinRow ? (
-          <div className="product-name-cell" title={product.name}>
+          <div 
+            className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap cursor-help" 
+            title={product.name}
+          >
             <div className="text-xs leading-tight">
-              <span className="truncate-20">
-                {truncateText(product.name, 40)}
-              </span>
+              {(() => {
+                const result = truncateText(product.name, 40);
+                return result.truncated;
+              })()}
             </div>
           </div>
         ) : (
@@ -505,14 +513,15 @@ export const ProductTableRow: React.FC<Props> = ({
         {asinInfo ? (
           asinInfo.productName ? (
             <div
-              className="amazon-product-name-cell cursor-pointer group"
+              className="max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer group"
               onClick={handleAmazonLinkClick}
               title={`${asinInfo.productName}\nクリックでAmazonページを開く`}
             >
               <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline group-hover:bg-blue-50 p-1 rounded transition-colors">
-                <span className="truncate-20">
-                  {truncateText(asinInfo.productName, 40)}
-                </span>
+                {(() => {
+                  const result = truncateText(asinInfo.productName, 40);
+                  return result.truncated;
+                })()}
                 <ExternalLink className="w-2 h-2 inline ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
