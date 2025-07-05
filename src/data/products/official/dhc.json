@@ -89,7 +89,8 @@
           "note": "",
           "hasAmazonStore": false,
           "hasOfficialStore": false,
-          "isPartnerCarrierUnavailable": true
+          "isPartnerCarrierUnavailable": true,
+          "isDangerousGoods": true
         }
       ]
     },
