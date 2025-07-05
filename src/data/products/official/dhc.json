@@ -25,7 +25,8 @@
           "isPartnerCarrierUnavailable": false,
           "isDangerousGoods": false
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "name": "DHC薬用ディープクレンジングオイル（L）",
