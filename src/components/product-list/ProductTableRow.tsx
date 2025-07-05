@@ -186,7 +186,7 @@ export const ProductTableRow: React.FC<Props> = ({
   // 仕入価格表示の生成（1個あたり対応）
   const getPurchasePriceDisplay = () => {
     if (!shopPricingConfig) {
-      return `${(product.salePrice || product.price).toLocaleString()}円`;
+      return `${Math.round(product.salePrice || product.price).toLocaleString()}円`;
     }
 
     const actualCost = calculateActualCost(
@@ -203,7 +203,7 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {actualCost.toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}円
             </div>
             <div className="text-xs text-gray-500">
               -{shopPricingConfig.fixedDiscount}円
@@ -220,12 +220,13 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {actualCost.toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}円
             </div>
             <div className="text-xs text-gray-500">
-              -{totalDiscountRate}%
               {userDiscountRate > 0 && (
                 <div>({baseDiscountRate}%+{userDiscountRate}%)</div>
+              ) || (
+                <div>({baseDiscountRate}%)</div>
               )}
             </div>
           </div>
@@ -236,16 +237,16 @@ export const ProductTableRow: React.FC<Props> = ({
         return (
           <div className="text-center">
             <div className="font-medium text-blue-600 text-sm">
-              {actualCost.toLocaleString()}円
+              {Math.round(actualCost).toLocaleString()}円
             </div>
             <div className="text-xs text-gray-500">
-              -{discountRate}%
+              ({discountRate}%)
             </div>
           </div>
         );
 
       default:
-        return `${actualCost.toLocaleString()}円`;
+        return `${Math.round(actualCost).toLocaleString()}円`;
     }
   };
 
@@ -267,7 +268,7 @@ export const ProductTableRow: React.FC<Props> = ({
                 {product.salePrice.toLocaleString()}円
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {unitPrice.toLocaleString()}円/1{unitType}
+                {Math.round(unitPrice).toLocaleString()}円/1{unitType}
               </div>
             </div>
           );
@@ -278,7 +279,7 @@ export const ProductTableRow: React.FC<Props> = ({
                 {product.price.toLocaleString()}円
               </div>
               <div className="text-blue-600 font-medium text-xs border-t border-gray-200 pt-1 mt-1">
-                {unitPrice.toLocaleString()}円/1{unitType}
+                {Math.round(unitPrice).toLocaleString()}円/1{unitType}
               </div>
             </div>
           );
@@ -572,7 +573,7 @@ export const ProductTableRow: React.FC<Props> = ({
           <div className={`font-medium text-sm ${
             profitInfo.profit >= 0 ? "text-green-600" : "text-red-600"
           }`}>
-            {profitInfo.profit.toLocaleString()}円
+            {Math.round(profitInfo.profit).toLocaleString()}円
           </div>
         ) : (
           <span className="text-gray-400 text-xs">-</span>

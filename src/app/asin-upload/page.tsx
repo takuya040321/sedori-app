@@ -10,6 +10,8 @@ import { Upload, FileText, CheckCircle, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer } from "@/components/layout/PageContainer";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 const HEADER_MAP: Record<string, AsinInfoHeaderKey> = {
   "URL: Amazon": "url",
@@ -217,6 +219,14 @@ export default function AsinUploadPage() {
         >
           {/* ヘッダー */}
           <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                  <ArrowLeft className="w-4 h-4" />
+                  ダッシュボードに戻る
+                </Button>
+              </Link>
+            </div>
             <h1 className="text-4xl font-bold text-gradient">ASIN一括登録</h1>
             <p className="text-lg text-gray-600">Excel/CSVファイルから商品情報を一括登録できます</p>
           </div>

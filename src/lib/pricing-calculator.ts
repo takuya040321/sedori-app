@@ -117,7 +117,7 @@ export function calculateProfitWithShopPricing(
   const actualCost = calculateActualCost(originalPrice, salePrice, config, userDiscountSettings, productName);
   
   // 利益計算
-  const profit = calcProfit(amazonPrice, sellingFee, fbaFee, actualCost);
+  const profit = Math.round(calcProfit(amazonPrice, sellingFee, fbaFee, actualCost));
   const profitMargin = calcProfitMargin(amazonPrice, sellingFee, fbaFee, actualCost);
   const roi = calcROI(amazonPrice, sellingFee, fbaFee, actualCost);
   
@@ -161,7 +161,7 @@ export function calculateProfitWithShopPricing(
   }
   
   return {
-    actualCost,
+    actualCost: Math.round(actualCost),
     profit,
     profitMargin,
     roi,
