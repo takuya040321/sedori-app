@@ -431,18 +431,18 @@ export const ProductTableRow: React.FC<Props> = ({
       </td>
       
       {/* 2. 商品名 - 最初の行のみ表示 */}
-      <td className="px-2 py-1 w-48 relative group">
+      <td className="px-2 py-1 w-48 relative group cursor-default">
         {isFirstAsinRow ? (
           <>
             <div 
-              className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap cursor-help text-xs leading-tight" 
+              className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-xs leading-tight" 
               title={product.name}
             >
               {truncateText(product.name, 40)}
             </div>
             {/* ホバー時の全文表示 */}
             {product.name.length > 40 && (
-              <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50 max-w-xs break-words opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+              <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50 max-w-xs break-words opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none">
                 {product.name}
               </div>
             )}
@@ -514,18 +514,18 @@ export const ProductTableRow: React.FC<Props> = ({
           asinInfo.productName ? (
             <>
               <div
-                className="max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
+                className="max-w-[250px] cursor-pointer"
                 onClick={handleAmazonLinkClick}
                 title={`${asinInfo.productName}\nクリックでAmazonページを開く`}
               >
-                <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline hover:bg-blue-50 p-1 rounded transition-colors">
+                <div className="text-xs leading-tight text-blue-600 hover:text-blue-800 hover:underline hover:bg-blue-50 p-1 rounded transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
                   {truncateText(asinInfo.productName, 40)}
                   <ExternalLink className="w-2 h-2 inline ml-1 opacity-0 hover:opacity-100 transition-opacity" />
                 </div>
               </div>
               {/* ホバー時の全文表示 */}
               {asinInfo.productName.length > 40 && (
-                <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50 max-w-xs break-words opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+                <div className="absolute left-0 top-full mt-1 bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-50 max-w-xs break-words opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none">
                   {asinInfo.productName}
                 </div>
               )}
