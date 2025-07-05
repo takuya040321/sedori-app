@@ -81,7 +81,7 @@ export const ProductTableRow: React.FC<Props> = ({
     let convertedValue: any = value;
     
     // 型変換
-    if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee" || field === "complaintCount") {
+    if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee") {
       const numValue = parseFloat(value);
       convertedValue = isNaN(numValue) ? (field === "sellingFee" || field === "fbaFee" ? null : 0) : numValue;
     }
@@ -100,9 +100,9 @@ export const ProductTableRow: React.FC<Props> = ({
   const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
     const isEditing = editingField === field;
     
-    // 月販売数と苦情回数の特別処理：0の場合も"-"で表示
+    // 月販売数の特別処理：0の場合も"-"で表示
     let displayValue;
-    if (field === "soldUnit" || field === "complaintCount") {
+    if (field === "soldUnit") {
       displayValue = (currentValue === null || currentValue === undefined || currentValue === 0) ? "-" : 
                     (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
     } else {
@@ -661,16 +661,7 @@ export const ProductTableRow: React.FC<Props> = ({
         )}
       </td>
       
-      {/* 18. 苦情回数 */}
-      <td className="px-2 py-1 text-center">
-        {asinInfo && asinIndex !== undefined ? (
-          renderEditableField("complaintCount", asinInfo.complaintCount || 0, "0", "件")
-        ) : (
-          <span className="text-gray-400 text-xs">-</span>
-        )}
-      </td>
-      
-      {/* 19. 非表示 - 最初の行のみ表示 */}
+      {/* 18. 非表示 - 最初の行のみ表示 */}
       <td className="px-2 py-1 text-center">
         {isFirstAsinRow ? (
           <input
@@ -682,7 +673,7 @@ export const ProductTableRow: React.FC<Props> = ({
         ) : null}
       </td>
       
-      {/* 20. メモ - 最初の行のみ表示 */}
+      {/* 19. メモ - 最初の行のみ表示 */}
       <td className="px-2 py-1">
         {isFirstAsinRow ? (
           <input

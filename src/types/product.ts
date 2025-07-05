@@ -25,7 +25,6 @@ export interface AsinInfo {
   isPartnerCarrierUnavailable?: boolean; // パートナーキャリア不可フラグ追加
   hasOfficialStore?: boolean; // 公式有無フラグ追加
   hasAmazonStore?: boolean; // Amazon有無フラグ追加
-  complaintCount?: number; // 苦情回数追加
 }
 
 export interface ShopData {

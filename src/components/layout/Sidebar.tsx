@@ -97,8 +97,7 @@ export function Sidebar() {
       <div className="space-y-1">
         {item.href ? (
           <Link href={item.href}>
-            <motion.div
-              whileHover={{ x: 2 }}
+            <div
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                 level > 0 && "ml-6",
@@ -109,7 +108,7 @@ export function Sidebar() {
             >
               {item.icon}
               {!isCollapsed && <span className="truncate">{item.title}</span>}
-            </motion.div>
+            </div>
           </Link>
         ) : (
           <button
@@ -124,12 +123,12 @@ export function Sidebar() {
               <>
                 <span className="truncate flex-1 text-left">{item.title}</span>
                 {hasChildren && (
-                  <motion.div
-                    animate={{ rotate: isExpanded ? 90 : 0 }}
-                    transition={{ duration: 0.2 }}
+                  <div
+                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                    className="transition-transform duration-200"
                   >
                     <ChevronRight className="w-4 h-4" />
-                  </motion.div>
+                  </div>
                 )}
               </>
             )}
@@ -137,50 +136,36 @@ export function Sidebar() {
         )}
 
         {/* サブメニュー */}
-        <AnimatePresence>
-          {hasChildren && isExpanded && !isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-1"
-            >
-              {item.children?.map((child) => (
-                <NavItemComponent key={child.title} item={child} level={level + 1} />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {hasChildren && isExpanded && !isCollapsed && (
+          <div className="space-y-1">
+            {item.children?.map((child) => (
+              <NavItemComponent key={child.title} item={child} level={level + 1} />
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <motion.div
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      className="bg-white border-r border-gray-200 h-screen flex flex-col shadow-sm"
+    <div
+      style={{ width: isCollapsed ? 80 : 280 }}
+      className="bg-white border-r border-gray-200 h-screen flex flex-col shadow-sm transition-all duration-300"
     >
       {/* ヘッダー */}
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-3"
-              >
-                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-md">
-                  <Store className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-gradient font-bold text-xl">ShopScraper</h1>
-                  <p className="text-xs text-gray-500">商品管理システム</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {!isCollapsed && (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-md">
+                <Store className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-gradient font-bold text-xl">ShopScraper</h1>
+                <p className="text-xs text-gray-500">商品管理システム</p>
+              </div>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -201,19 +186,12 @@ export function Sidebar() {
 
       {/* フッター */}
       <div className="p-4 border-t border-gray-100">
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-xs text-gray-400 text-center"
-            >
-              © 2025 ShopScraper
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!isCollapsed && (
+          <div className="text-xs text-gray-400 text-center">
+            © 2025 ShopScraper
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }

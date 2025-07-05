@@ -68,7 +68,6 @@ export const ProductTableHeader: React.FC<ProductTableHeaderProps> = ({
         <ResizableHeader className="w-16">ﾊﾟｰｷｬﾘ</ResizableHeader>
         <ResizableHeader className="w-16">公式有無</ResizableHeader>
         <ResizableHeader className="w-16">Amazon有無</ResizableHeader>
-        <ResizableHeader className="w-16">苦情回数</ResizableHeader>
         <ResizableHeader className="w-16">非表示</ResizableHeader>
         <SortableHeader field="memo" className="w-32">
           <span>メモ</span>

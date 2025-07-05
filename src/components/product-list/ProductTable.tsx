@@ -254,7 +254,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
               • <strong>画像ホバー</strong>: 商品画像にマウスを合わせると拡大表示されます
             </p>
             <p>
-              • <strong>新規フィールド</strong>: 公式有無、Amazon有無、苦情回数を追加（クリックで編集可能）
+              • <strong>新規フィールド</strong>: 公式有無、Amazon有無を追加（チェックボックスで編集可能）
             </p>
             {shopName === 'dhc' && (
               <p>
