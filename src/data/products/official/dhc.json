@@ -20,7 +20,10 @@
             "4511413529652"
           ],
           "note": "",
-          "hasAmazonStore": false
+          "hasAmazonStore": false,
+          "hasOfficialStore": false,
+          "isPartnerCarrierUnavailable": false,
+          "isDangerousGoods": false
         }
       ]
     },

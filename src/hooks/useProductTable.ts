@@ -276,11 +276,35 @@ export function useProductTable(category: string, shopName: string, initialProdu
   };
 
   const handleHiddenChange = (_rowIndex: number, _checked: boolean) => {
+    // 楽観的更新：即座にUIを更新
+    const updatedProducts = [...allProducts];
+    if (updatedProducts[_rowIndex]) {
+      updatedProducts[_rowIndex] = {
+        ...updatedProducts[_rowIndex],
+        hidden: _checked
+      };
+    }
+
+    // SWRキャッシュを即座に更新
+    mutate({ data: { products: updatedProducts } }, false);
+
+    // バックエンドに保存（非同期）
     fetch(`/api/products/${category}/${shopName}/update-hidden`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ index: _rowIndex, hidden: _checked }),
-    }).then(() => mutate());
+    })
+    .then(response => {
+      if (!response.ok) {
+        // エラーの場合は元に戻す
+        console.error("Failed to update hidden status");
+        mutate(); // サーバーから最新データを再取得
+      }
+    })
+    .catch(error => {
+      console.error("Failed to update hidden status:", error);
+      mutate(); // サーバーから最新データを再取得
+    });
   };
 
   // メモ更新処理
