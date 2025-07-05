@@ -1,3 +1,6 @@
+// 環境変数を読み込み
+require('dotenv').config({ path: '.env.local' });
+
 // scripts/migrate-data.js
 // 既存のJSONファイルからSupabaseへデータを移行するスクリプト
 
