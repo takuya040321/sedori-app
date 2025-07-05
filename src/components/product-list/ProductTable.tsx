@@ -49,6 +49,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
       handleDangerousGoodsChange,
       handlePartnerCarrierChange,
       handleAsinInfoUpdate,
+      handleProductDuplicate,
     } = useProductTable(category, shopName, initialProducts);
 
     const { userDiscountSettings, updateDiscountSetting, getDiscountSetting } = useUserDiscountSettings();
