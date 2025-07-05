@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Product, AsinInfo, ShopPricingConfig, UserDiscountSettings } from "@/types/product";
 import { calculateActualCost, calculateProfitWithShopPricing, extractUnitCount } from "@/lib/pricing-calculator";
-import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink } from "lucide-react";
+import { AlertTriangle, Truck, Plus, Trash2, Edit, ExternalLink, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,6 +19,7 @@ interface Props {
   onAsinRemove: (_rowIndex: number, _asinIndex: number) => void;
   onDangerousGoodsChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
   onPartnerCarrierChange: (_rowIndex: number, _asinIndex: number, _checked: boolean) => void;
+  onAsinInfoUpdate: (_rowIndex: number, _asinIndex: number, _field: keyof AsinInfo, _value: any) => void;
   shopPricingConfig?: ShopPricingConfig;
   userDiscountSettings?: UserDiscountSettings;
   isLoadingAsins?: boolean;
@@ -36,6 +37,7 @@ export const ProductTableRow: React.FC<Props> = ({
   onAsinRemove,
   onDangerousGoodsChange,
   onPartnerCarrierChange,
+  onAsinInfoUpdate,
   shopPricingConfig,
   userDiscountSettings = {},
   isLoadingAsins = false,
@@ -43,6 +45,8 @@ export const ProductTableRow: React.FC<Props> = ({
   const [memoValue, setMemoValue] = useState(product.memo || "");
   const [newAsin, setNewAsin] = useState("");
   const [isAddingAsin, setIsAddingAsin] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<{[key: string]: string}>({});
   const memoTimeoutRef = useRef<NodeJS.Timeout>();
 
   // メモの変更をデバウンス処理
@@ -58,6 +62,95 @@ export const ProductTableRow: React.FC<Props> = ({
     }, 1000);
   };
 
+  // 編集開始
+  const startEditing = (field: string, currentValue: any) => {
+    setEditingField(field);
+    setEditValues({
+      ...editValues,
+      [field]: String(currentValue || "")
+    });
+  };
+
+  // 編集保存
+  const saveEdit = async (field: string) => {
+    if (!asinInfo || asinIndex === undefined) return;
+    
+    const value = editValues[field];
+    let convertedValue: any = value;
+    
+    // 型変換
+    if (field === "price" || field === "soldUnit" || field === "sellingFee" || field === "fbaFee") {
+      const numValue = parseFloat(value);
+      if (field === "sellingFee" || field === "fbaFee") {
+        convertedValue = isNaN(numValue) ? null : numValue;
+      } else {
+        convertedValue = isNaN(numValue) ? 0 : numValue;
+      }
+    }
+    
+    await onAsinInfoUpdate(rowIndex, asinIndex, field as keyof AsinInfo, convertedValue);
+    setEditingField(null);
+  };
+
+  // 編集キャンセル
+  const cancelEdit = () => {
+    setEditingField(null);
+    setEditValues({});
+  };
+
+  // 編集可能フィールドのレンダリング
+  const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
+    const isEditing = editingField === field;
+    const displayValue = currentValue === null || currentValue === undefined ? "-" : 
+                        (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
+    
+    if (isEditing) {
+      return (
+        <div className="flex items-center gap-1">
+          <Input
+            type={field === "productName" ? "text" : "number"}
+            value={editValues[field] || ""}
+            onChange={(e) => setEditValues({...editValues, [field]: e.target.value})}
+            className="w-20 h-6 text-xs"
+            placeholder={placeholder}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveEdit(field);
+              if (e.key === "Escape") cancelEdit();
+            }}
+            autoFocus
+          />
+          <Button
+            size="sm"
+            onClick={() => saveEdit(field)}
+            className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700"
+          >
+            <Check className="w-3 h-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={cancelEdit}
+            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <div 
+        className="cursor-pointer hover:bg-blue-50 p-1 rounded group flex items-center gap-1"
+        onClick={() => startEditing(field, currentValue)}
+        title="クリックして編集"
+      >
+        <span className="text-sm">
+          {displayValue}{suffix}
+        </span>
+        <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
+      </div>
+    );
+  };
   // ASIN追加処理
   const handleAddAsin = async () => {
     if (newAsin.length === 10) {

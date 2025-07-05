@@ -245,6 +245,9 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
             <p>
               • <strong>横スクロール</strong>: 画面いっぱいに表示、横スクロールで全情報を確認
             </p>
+            <p>
+              • <strong>編集機能</strong>: Amazon価格、月販数、手数料、FBA料金をクリックして直接編集可能
+            </p>
             {shopName === 'dhc' && (
               <p>
                 • <strong>1個あたり表示</strong>: DHCの複数個商品は価格列に1個あたり価格を表示し、その価格で利益計算

@@ -299,6 +299,47 @@ export function useProductTable(category: string, shopName: string, initialProdu
     }
   };
 
+  // ASIN情報更新処理
+  const handleAsinInfoUpdate = async (_rowIndex: number, asinIndex: number, field: keyof AsinInfo, value: any) => {
+    try {
+      const product = allProducts[_rowIndex];
+      const asinInfo = product.asins?.[asinIndex];
+      
+      if (!asinInfo) return;
+
+      const brand = shopName === "vt-cosmetics" ? "vt-cosmetics" : "dhc";
+      
+      // ASIN情報を更新
+      await fetch(`/api/products/${category}/${shopName}/update-asin-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productIndex: _rowIndex, 
+          asinIndex, 
+          field,
+          value
+        }),
+      });
+
+      // ASINデータベースも更新
+      await fetch(`/api/asin-info-update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          asin: asinInfo.asin, 
+          brand, 
+          field,
+          value
+        }),
+      });
+
+      // データを再取得
+      mutate();
+    } catch (error) {
+      console.error("Failed to update ASIN info:", error);
+    }
+  };
+
   return {
     products: sortedProducts,
     allProducts,
@@ -316,5 +357,6 @@ export function useProductTable(category: string, shopName: string, initialProdu
     handleAsinRemove,
     handleDangerousGoodsChange,
     handlePartnerCarrierChange,
+    handleAsinInfoUpdate,
   };
 }
