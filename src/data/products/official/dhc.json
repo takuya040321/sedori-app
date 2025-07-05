@@ -55,7 +55,22 @@
       "imageUrl": "https://www.dhc.co.jp/goods/22262/summary.jpg",
       "price": 1634,
       "updatedAt": "2025-07-04T03:09:08.419Z",
-      "asins": []
+      "asins": [
+        {
+          "asin": "B00KHO5464",
+          "url": "https://www.amazon.co.jp/dp/B00KHO5464",
+          "productName": "DHC薬用ディープクレンジングオイル（M）",
+          "brand": "DHC",
+          "price": 1700,
+          "soldUnit": 0,
+          "sellingFee": 10,
+          "fbaFee": 434,
+          "jan": [
+            "4511413517437"
+          ],
+          "note": ""
+        }
+      ]
     },
     {
       "name": "DHCディープ クレンジング バーム",
