@@ -100,7 +100,7 @@ export function RecentActivity() {
                   {getStatusBadge(activity.status)}
                 </div>
                 <p className="text-sm text-gray-600 truncate">{activity.message}</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-1" suppressHydrationWarning>
                   {new Date(activity.timestamp).toLocaleString("ja-JP")}
                 </p>
               </div>

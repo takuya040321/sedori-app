@@ -51,6 +51,7 @@ export default async function DashboardPage() {
             icon={<Clock className="w-6 h-6" />}
             gradient="gradient-accent"
             delay={0.2}
+            suppressHydrationWarning
           />
           <KPICard
             title="セール商品"

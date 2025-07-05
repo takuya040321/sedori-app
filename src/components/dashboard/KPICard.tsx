@@ -13,9 +13,10 @@ interface KPICardProps {
   };
   gradient: string;
   delay?: number;
+  suppressHydrationWarning?: boolean;
 }
 
-export function KPICard({ title, value, icon, trend, gradient, delay = 0 }: KPICardProps) {
+export function KPICard({ title, value, icon, trend, gradient, delay = 0, suppressHydrationWarning = false }: KPICardProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -58,6 +59,7 @@ export function KPICard({ title, value, icon, trend, gradient, delay = 0 }: KPIC
               animate={isAnimating ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 0.3 }}
               className="text-3xl font-bold text-gray-900"
+              suppressHydrationWarning={suppressHydrationWarning}
             >
               {typeof value === "number" ? displayValue.toLocaleString() : value}
             </motion.div>

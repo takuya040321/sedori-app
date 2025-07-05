@@ -37,9 +37,11 @@ export default function ShopPageClient({ category, shopName, shopData }: ShopPag
               <h2 className="text-3xl font-bold text-gradient mb-2">{shopName.toUpperCase()} 商品一覧</h2>
               <p className="text-gray-600">
                 最終更新:{" "}
-                {shopData?.lastUpdated
-                  ? new Date(shopData.lastUpdated).toLocaleString("ja-JP")
-                  : "データなし"}
+                <span suppressHydrationWarning>
+                  {shopData?.lastUpdated
+                    ? new Date(shopData.lastUpdated).toLocaleString("ja-JP")
+                    : "データなし"}
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-4">
