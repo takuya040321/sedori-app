@@ -5,6 +5,7 @@ import { Product, AsinInfo, SortField, SortDirection, FilterSettings } from "@/t
 import { fetchASINInfo } from "@/lib/fetchASINInfo";
 import { calculateProfitWithShopPricing } from "@/lib/pricing-calculator";
 import { getShopPricingConfig } from "@/lib/pricing-config";
+import { useTableDisplaySettings } from "./useTableDisplaySettings";
 
 export function useProductTable(category: string, shopName: string, initialProducts: Product[]) {
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -19,20 +20,9 @@ export function useProductTable(category: string, shopName: string, initialProdu
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   
-  // フィルター状態
-  const [filters, setFilters] = useState<FilterSettings>({
-    search: '',
-    showHiddenOnly: false,
-    showDangerousGoods: false,
-    excludeDangerousGoods: false,
-    showPartnerCarrierUnavailable: false,
-    excludePartnerCarrierUnavailable: false,
-    excludeOfficialStore: false,
-    excludeAmazonStore: false,
-    showProfitableOnly: false,
-    priceRange: { min: null, max: null },
-    hasAsin: null,
-  });
+  // 設定から初期フィルター状態を取得
+  const { getSavedSettings } = useTableDisplaySettings();
+  const [filters, setFilters] = useState<FilterSettings>(() => getSavedSettings());
 
   // ショップ設定を取得
   const shopPricingConfig = getShopPricingConfig(category, shopName);

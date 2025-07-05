@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Store, ChevronRight, Menu, X, Package, ShoppingBag, Upload } from "lucide-react";
+import { Home, Store, ChevronRight, Menu, X, Package, ShoppingBag, Upload, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -71,7 +71,12 @@ const navigation: NavItem[] = [
     ],
   },
   {
-    title: "ASIN一括登録",
+    title: "設定",
+    href: "/settings",
+    icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    title: "ASIN一括登録", 
     href: "/asin-upload",
     icon: <Upload className="w-5 h-5" />,
   },
