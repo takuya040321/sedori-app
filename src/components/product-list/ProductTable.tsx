@@ -48,6 +48,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
       handleAsinRemove,
       handleDangerousGoodsChange,
       handlePartnerCarrierChange,
+      handleAsinInfoUpdate,
     } = useProductTable(category, shopName, initialProducts);
 
     const { userDiscountSettings, updateDiscountSetting, getDiscountSetting } = useUserDiscountSettings();
@@ -166,6 +167,7 @@ export const ProductTable = forwardRef<ProductTableHandle, ProductTableProps>(
                     onAsinRemove={handleAsinRemove}
                     onDangerousGoodsChange={handleDangerousGoodsChange}
                     onPartnerCarrierChange={handlePartnerCarrierChange}
+                    onAsinInfoUpdate={handleAsinInfoUpdate}
                     shopPricingConfig={shopPricingConfig}
                     userDiscountSettings={userDiscountSettings}
                     isLoadingAsins={loadingProductIndexes.includes(row.originalIndex)}

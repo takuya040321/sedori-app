@@ -101,18 +101,19 @@ export const ProductTableRow: React.FC<Props> = ({
   // 編集可能フィールドのレンダリング
   const renderEditableField = (field: string, currentValue: any, placeholder: string = "", suffix: string = "") => {
     const isEditing = editingField === field;
-    const displayValue = currentValue === null || currentValue === undefined ? "-" : 
+    const displayValue = currentValue === null || currentValue === undefined ? (field === "soldUnit" ? "0" : "-") : 
                         (typeof currentValue === "number" ? currentValue.toLocaleString() : String(currentValue));
     
     if (isEditing) {
       return (
         <div className="flex items-center gap-1">
           <Input
-            type={field === "productName" ? "text" : "number"}
+            type="number"
             value={editValues[field] || ""}
             onChange={(e) => setEditValues({...editValues, [field]: e.target.value})}
-            className="w-20 h-6 text-xs"
+            className="w-24 h-7 text-xs"
             placeholder={placeholder}
+            step={field === "sellingFee" ? "0.1" : "1"}
             onKeyDown={(e) => {
               if (e.key === "Enter") saveEdit(field);
               if (e.key === "Escape") cancelEdit();
@@ -122,7 +123,7 @@ export const ProductTableRow: React.FC<Props> = ({
           <Button
             size="sm"
             onClick={() => saveEdit(field)}
-            className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700"
+            className="h-7 w-7 p-0 bg-green-600 hover:bg-green-700"
           >
             <Check className="w-3 h-3" />
           </Button>
@@ -130,7 +131,7 @@ export const ProductTableRow: React.FC<Props> = ({
             size="sm"
             variant="ghost"
             onClick={cancelEdit}
-            className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+            className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700"
           >
             <X className="w-3 h-3" />
           </Button>
@@ -140,11 +141,11 @@ export const ProductTableRow: React.FC<Props> = ({
     
     return (
       <div 
-        className="cursor-pointer hover:bg-blue-50 p-1 rounded group flex items-center gap-1"
+        className="cursor-pointer hover:bg-blue-50 p-2 rounded group flex items-center justify-center gap-1 min-h-[32px]"
         onClick={() => startEditing(field, currentValue)}
         title="クリックして編集"
       >
-        <span className="text-sm">
+        <span className="text-sm font-medium">
           {displayValue}{suffix}
         </span>
         <Edit className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity" />
